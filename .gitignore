@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.omnilaunch_venv/
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Omnilaunch specific
+# Keep registry source files, but ignore built bundles and temp files
+registry/*/*/runner.tar.gz
+registry/*/*/manifest.json
+*.pyc

@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "omnilaunch"
+version = "0.1.0"
+description = "Reproducible model training and inference runners for Modal"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+    {name = "Omnilaunch Contributors"}
+]
+dependencies = [
+    "modal>=0.64.0",
+    "typer>=0.12.0",
+    "rich>=13.0.0",
+    "pyyaml>=6.0",
+    "jsonschema>=4.0.0",
+    "huggingface-hub>=0.20.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+]
+
+[project.scripts]
+omni = "omnilaunch.cli.main:main"
+
+[tool.setuptools]
+packages = ["omnilaunch", "omnilaunch.cli"]
+
+[tool.setuptools.package-dir]
+"omnilaunch" = "."
+"omnilaunch.cli" = "cli"
+

@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "runners": [
+    {
+      "name": "omnilaunch/sdxl",
+      "latest": "0.1.0",
+      "versions": {
+        "0.1.0": {
+          "path": "/Users/gabrielbusto/projects/fun-apps/training-data-repo/omnilaunch/registry/omnilaunch/sdxl/0.1.0/runner.tar.gz",
+          "sha256": "2a1f612ee5519ce7d12da048bc8fd631bca80f5b5e1321ce49ad4e9caa5ff388"
+        }
+      }
+    }
+  ]
+}
