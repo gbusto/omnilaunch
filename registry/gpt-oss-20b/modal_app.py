@@ -117,6 +117,41 @@ def setup(run_downloads: bool = True) -> Dict[str, Any]:
         return {"ok": False, "error": str(e), "checks": checks}
 
 
+def parse_harmony_output(output: str) -> dict:
+    """
+    Parse GPT-OSS harmony format output into separate channels.
+    
+    Harmony format: <|channel|>NAME<|message|>CONTENT<|end|>
+    
+    Channels:
+        - analysis: Internal reasoning/thinking
+        - commentary: Meta-observations (optional)
+        - final: User-facing response
+    
+    Args:
+        output: Raw model output with harmony format tokens
+        
+    Returns:
+        dict with 'response', 'analysis', 'commentary' keys
+    """
+    import re
+    
+    # Pattern: <|channel|>NAME<|message|>CONTENT<|end|> or <|return|>
+    pattern = r'<\|channel\|>(\w+)<\|message\|>(.*?)(?:<\|end\|>|<\|return\|>)'
+    
+    channels = {}
+    for match in re.finditer(pattern, output, re.DOTALL):
+        channel_name = match.group(1).lower()
+        content = match.group(2).strip()
+        channels[channel_name] = content
+    
+    return {
+        "response": channels.get("final", output.strip()),
+        "analysis": channels.get("analysis"),
+        "commentary": channels.get("commentary"),
+    }
+
+
 @app.function(
     image=image,
     gpu="H100",
@@ -152,29 +187,53 @@ def infer(params: Dict[str, Any]) -> Dict[str, Any]:
         if not any(m.get("role") == "system" for m in messages):
             messages = [system_msg] + messages
     
-    print(f"Loading GPT-OSS-20B pipeline from {MODEL_PATH}...")
-    pipe = pipeline(
-        "text-generation",
-        model=MODEL_PATH,
+    print(f"Loading GPT-OSS-20B model and tokenizer from {MODEL_PATH}...")
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+    import torch
+    
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
+    model = AutoModelForCausalLM.from_pretrained(
+        MODEL_PATH,
         torch_dtype="auto",
         device_map="auto",
     )
     
-    print(f"Generating response (max_tokens={max_tokens}, temp={temperature})...")
-    outputs = pipe(
-        messages,
+    # Prepare chat template and tokenize input
+    input_ids = tokenizer.apply_chat_template(
+        messages, 
+        return_tensors="pt", 
+        add_generation_prompt=True
+    ).to(model.device)
+    
+    print(f"Generating response (max_new_tokens={max_tokens}, temp={temperature})...")
+    output_ids = model.generate(
+        input_ids,
         max_new_tokens=max_tokens,
-        temperature=temperature,
         do_sample=temperature > 0,
+        temperature=temperature,
     )
     
-    # Extract assistant response
-    response_text = outputs[0]["generated_text"][-1]["content"]
+    # Decode with special tokens preserved (harmony format)
+    full_response_text = tokenizer.decode(output_ids[0], skip_special_tokens=False)
+    
+    # Extract only the generated part (exclude input prompt)
+    generated_text_only = tokenizer.decode(
+        output_ids[0][input_ids.shape[1]:], 
+        skip_special_tokens=False
+    )
+    
+    print("Generated output (with harmony tokens):")
+    print(generated_text_only[:500] + "..." if len(generated_text_only) > 500 else generated_text_only)
+    
+    # Parse harmony format to extract all channels
+    parsed = parse_harmony_output(generated_text_only)
     
     return {
         "content_type": "application/json",
         "data": {
-            "response": response_text,
+            "response": parsed["response"],        # User-facing answer (from 'final' channel)
+            "analysis": parsed["analysis"],        # Internal reasoning/thinking
+            "commentary": parsed["commentary"],    # Meta-observations (optional)
             "reasoning_level": reasoning_level,
         },
     }
