@@ -47,6 +47,23 @@ def _parse_runner_ref(ref: str) -> tuple[str, str | None]:
     return ref, None
 
 
+def _get_entrypoint_config(runner_yaml_lines: list[str], entrypoint_name: str) -> dict:
+    """Extract entrypoint config from runner.yaml lines."""
+    import yaml
+    data = yaml.safe_load("\n".join(runner_yaml_lines))
+    entrypoint = data.get("entrypoints", {}).get(entrypoint_name, {})
+    
+    if isinstance(entrypoint, dict):
+        return {
+            "function": entrypoint.get("function", ""),
+            "gpu": entrypoint.get("gpu"),
+            "schema": entrypoint.get("schema")
+        }
+    else:
+        # Shouldn't happen with new format
+        return {"function": str(entrypoint), "gpu": None, "schema": None}
+
+
 def _validate_runner_dir(runner_dir: Path) -> dict:
     problems: list[str] = []
     files: dict[str, str] = {}
@@ -237,16 +254,17 @@ def cmd_run(args: argparse.Namespace) -> int:
         # Load runner.yaml
         ry = (td_path / "runner.yaml").read_text(encoding="utf-8").splitlines()
         app_name = None
-        schema_map: dict[str, str] = {}
         for line in ry:
             s = line.strip()
             if s.startswith("app_name:"):
                 app_name = s.split(":", 1)[1].strip().strip('"')
-            if s.startswith("infer:") and "params_schema:" in "\n".join(ry):
-                # handled below by a simple parse; for MVP, infer.json known
-                pass
-        # Choose schema per entrypoint if present
-        schema_path = td_path / "schema" / f"{args.entrypoint}.json"
+        
+        # Get entrypoint config (includes GPU and schema info)
+        entrypoint_config = _get_entrypoint_config(ry, args.entrypoint)
+        
+        # Choose schema per entrypoint if specified in config
+        schema_filename = entrypoint_config.get("schema")
+        schema_path = td_path / "schema" / schema_filename if schema_filename else td_path / "schema" / f"{args.entrypoint}.json"
         params_obj: dict = {}
         # Load params from file path OR inline JSON/YAML string
         if args.params:
@@ -417,17 +435,20 @@ def cmd_list(_args: argparse.Namespace) -> int:
             latest = runner.get("latest", "N/A")
             versions = runner.get("versions", {})
             
-            # Try to get GPU from runner metadata (read from bundle_path or manifest)
-            # For now, we'll read from the runner.yaml if available
-            gpu = "N/A"
+            # Read entrypoint GPU info from runner.yaml
+            entrypoints_info = []
             try:
-                # Parse name to get directory path
                 runner_dir = registry_root / name.replace("omnilaunch/", "")
                 runner_yaml = runner_dir / "runner.yaml"
                 if runner_yaml.exists():
                     import yaml
                     meta = yaml.safe_load(runner_yaml.read_text())
-                    gpu = meta.get("gpu", "N/A")
+                    entrypoints = meta.get("entrypoints", {})
+                    for ep_name, ep_config in entrypoints.items():
+                        if isinstance(ep_config, dict):
+                            gpu = ep_config.get("gpu")
+                            gpu_str = gpu if gpu else "CPU"
+                            entrypoints_info.append(f"{ep_name} ({gpu_str})")
             except Exception:
                 pass
             
@@ -436,7 +457,8 @@ def cmd_list(_args: argparse.Namespace) -> int:
             print(f"  {name}")
             print(f"    Latest: {latest}")
             print(f"    Versions: {', '.join(version_list)}")
-            print(f"    GPU: {gpu}")
+            if entrypoints_info:
+                print(f"    Entrypoints: {', '.join(entrypoints_info)}")
             print()
         
         return 0

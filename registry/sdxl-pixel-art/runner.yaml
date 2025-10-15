@@ -1,14 +1,18 @@
 name: omnilaunch/sdxl-pixel-art
 version: "0.1.0"
-gpu: "A10G"
 volume: "omnilaunch"
 app_name: "omnilaunch-sdxl-pixel-art"
 entrypoints:
-  download_files:   modal_app.py::download_files
-  setup:            modal_app.py::setup
-  infer:            modal_app.py::infer
-params_schema:
-  infer: schema/infer.json
+  download_files:
+    function: modal_app.py::download_files
+    gpu: null
+  setup:
+    function: modal_app.py::setup
+    gpu: null
+  infer:
+    function: modal_app.py::infer
+    gpu: "A10G"
+    schema: schema/infer.json
 dataset_schema: schema/dataset.json
 compat:
   python: ">=3.10,<3.12"
