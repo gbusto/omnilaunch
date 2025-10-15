@@ -5,7 +5,7 @@ OpenAI's GPT-OSS-20B with harmony format reasoning - see the model's internal th
 ## Model
 
 - **Base Model**: [openai/gpt-oss-20b](https://huggingface.co/openai/gpt-oss-20b)
-- **GPU**: H100 (80GB)
+- **GPU**: A10G (24GB) with MXFP4 quantization
 - **Architecture**: Transformer-based language model (20B parameters)
 - **Special Feature**: Harmony format with separate reasoning, commentary, and final response channels
 
@@ -28,7 +28,7 @@ omni run omnilaunch/gpt-oss-20b:0.1.0 infer \
 
 ### `infer`
 
-Chat completion with internal reasoning exposed via harmony format.
+Chat completion with internal reasoning exposed via harmony format (MXFP4 quantized on A10G).
 
 **Parameters:**
 - `messages` (array, required): Chat messages in OpenAI format `[{"role": "user", "content": "..."}]`
@@ -78,13 +78,13 @@ Verifies environment and downloads model if needed.
 
 ## Performance & Cost
 
-| Operation | GPU | Duration | Cost* |
-|-----------|-----|----------|-------|
+| Entrypoint | GPU | Duration | Cost* |
+|------------|-----|----------|-------|
 | Setup (first time) | N/A (CPU) | ~5-8 min | ~$0.005 |
-| Inference (256 tokens; medium reasoning) | H100 | ~23 sec | ~$0.025 |
-| Inference (~1k tokens; medium reasoning) | H100 | ~32 sec | ~$0.035 |
+| `infer` (256 tokens; medium reasoning) | A10G | ~1 min | ~$0.018 |
+| `infer` (~1k tokens; medium reasoning) | A10G | ~1-2 min | ~$0.028 |
 
-*Inference is meant to be used for quick testing, so it releases the GPU after each response. This means it incurs a slight cost for cold start on each `run` call. I plan to add a `serve` function for optimized, fast inference, as well as supporting quantized versions that can use less expensive GPUs.
+*Inference is meant to be used for quick testing, so it releases the GPU after each response. This means it incurs a slight cost for cold start on each `run` call. I plan to add a `serve` function for optimized, fast inference.
 
 ## Harmony Format
 
@@ -98,10 +98,12 @@ This allows you to see the model's "chain of thought" before it produces the fin
 
 ## Tips
 
+- **MXFP4 Quantization**: The model uses MXFP4 quantization (requires `triton>=3.4.0` and `kernels` package) to run efficiently on A10G GPUs
 - **Reasoning levels**: Use `"high"` for complex problems, `"low"` for simple queries to save tokens
 - **Temperature**: Use `0.0` for deterministic outputs, `0.7-1.0` for creative responses
 - **Analyzing reasoning**: The `analysis` field shows how the model approached the problem
 - **Token budget**: Set `max_tokens` appropriately - reasoning can consume significant tokens
+- **Cost optimization**: A10G provides excellent price/performance for this quantized model
 
 ## Version
 

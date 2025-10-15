@@ -26,16 +26,20 @@ omnilaunch_vol = modal.Volume.from_name(VOLUME_NAME, create_if_missing=True)
 image = (
     modal.Image.debian_slim(python_version="3.11")
     .pip_install(
-        "torch==2.5.1",
+        "torch==2.9.0",
         "transformers==4.57.0",
-        "accelerate==1.2.1",
-        "huggingface_hub",
+        "accelerate==1.10.1",
+        "triton==3.5.0",
+        "kernels==0.10.3",
+        "huggingface_hub==0.35.3",
         extra_index_url="https://download.pytorch.org/whl/cu121",
     )
     .env({
         "HF_HOME": HF_CACHE_DIR,
         "HF_HUB_CACHE": HF_CACHE_DIR,
         "TRANSFORMERS_CACHE": HF_CACHE_DIR,
+        # Reduce VRAM fragmentation spikes during allocation
+        "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True",
     })
 )
 
@@ -154,7 +158,7 @@ def parse_harmony_output(output: str) -> dict:
 
 @app.function(
     image=image,
-    gpu="H100",
+    gpu="A10G",
     volumes={"/omnilaunch": omnilaunch_vol},
     timeout=600,
     scaledown_window=2

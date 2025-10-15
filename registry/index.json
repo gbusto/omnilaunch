@@ -17,7 +17,7 @@
       "versions": {
         "0.1.0": {
           "path": "/Users/gabrielbusto/projects/fun-apps/training-data-repo/omnilaunch/registry/omnilaunch/sdxl-pixel-art/0.1.0/runner.tar.gz",
-          "sha256": "f7eaa8e05dc07d056dfc406ab2766c9ecc996e29758b29b299181cb41721b3a7"
+          "sha256": "0f5ab6e6bbdc0319da8bf47f0e455ec2b02c791f6400d92804f5c8bd25bf580f"
         }
       }
     },
@@ -37,7 +37,7 @@
       "versions": {
         "0.1.0": {
           "path": "/Users/gabrielbusto/projects/fun-apps/training-data-repo/omnilaunch/registry/omnilaunch/gpt-oss-20b/0.1.0/runner.tar.gz",
-          "sha256": "bf9d613d3479ec32d3cb6760024d3ba1f09057aa6ec7c6371af1605bde8e42c3"
+          "sha256": "e3455db5257faaf81d8fb5c91f4266ae320a8556d535cc1d6066f787f35397dc"
         }
       }
     }
