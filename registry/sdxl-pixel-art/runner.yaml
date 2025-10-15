@@ -1,8 +1,8 @@
-name: omnilaunch/sdxl
+name: omnilaunch/sdxl-pixel-art
 version: "0.1.0"
 gpu: "A10G"
 volume: "omnilaunch"
-app_name: "omnilaunch-sdxl"
+app_name: "omnilaunch-sdxl-pixel-art"
 entrypoints:
   download_files:   modal_app.py::download_files
   setup:            modal_app.py::setup
@@ -13,5 +13,4 @@ dataset_schema: schema/dataset.json
 compat:
   python: ">=3.10,<3.12"
   cuda: "12.1"
-
 

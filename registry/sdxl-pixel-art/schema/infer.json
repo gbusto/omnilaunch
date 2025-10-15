@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SDXL Pixel Art Inference Parameters",
+  "type": "object",
+  "properties": {
+    "prompt": { 
+      "type": "string",
+      "description": "Image prompt. Prefix with 'pixel' for best results (e.g., 'pixel, a cute corgi')"
+    },
+    "negative_prompt": { 
+      "type": "string",
+      "description": "Default includes '3d render, realistic' to avoid non-pixel-art styles"
+    },
+    "width": { "type": "integer", "minimum": 64 },
+    "height": { "type": "integer", "minimum": 64 },
+    "steps": { 
+      "type": "integer", 
+      "minimum": 1,
+      "description": "Recommended: 8 steps with LCM scheduler"
+    },
+    "guidance_scale": { 
+      "type": "number", 
+      "minimum": 0,
+      "description": "Recommended: 1.5 for LCM"
+    },
+    "seed": { "type": "integer", "minimum": 0 },
+    "lora_strength": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 2,
+      "description": "Pixel art LoRA strength. Default: 1.2"
+    }
+  },
+  "required": ["prompt"],
+  "additionalProperties": false
+}
+

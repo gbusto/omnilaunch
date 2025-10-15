@@ -7,15 +7,26 @@ import os
 # ============================================================================
 
 # App and volume
-APP_NAME = "omnilaunch-sdxl"
+APP_NAME = "omnilaunch-sdxl-spo"
 VOLUME_NAME = "omnilaunch"
 
-# Model paths (following /omnilaunch/models/<hf_user>/<hf_repo> convention)
-HF_MODEL_REPO = "stabilityai/stable-diffusion-xl-base-1.0"
-MODEL_PATH = "/omnilaunch/models/stabilityai/stable-diffusion-xl-base-1.0"
-MODEL_INDEX_FILE = f"{MODEL_PATH}/model_index.json"
+# Base model
+HF_BASE_MODEL_REPO = "stabilityai/stable-diffusion-xl-base-1.0"
+BASE_MODEL_PATH = "/omnilaunch/models/stabilityai/stable-diffusion-xl-base-1.0"
+BASE_MODEL_INDEX_FILE = f"{BASE_MODEL_PATH}/model_index.json"
 
-# HuggingFace cache location
+# Custom VAE (fp16 fix)
+HF_VAE_REPO = "madebyollin/sdxl-vae-fp16-fix"
+VAE_PATH = "/omnilaunch/models/madebyollin/sdxl-vae-fp16-fix"
+VAE_CONFIG_FILE = f"{VAE_PATH}/config.json"
+
+# SPO LoRA
+HF_SPO_LORA_REPO = "SPO-Diffusion-Models/SPO-SDXL_4k-p_10ep_LoRA"
+SPO_LORA_FILENAME = "spo_sdxl_10ep_4k-data_lora_diffusers.safetensors"
+SPO_LORA_DIR = "/omnilaunch/loras/SPO-SDXL_4k-p_10ep_LoRA"
+SPO_LORA_PATH = f"{SPO_LORA_DIR}/{SPO_LORA_FILENAME}"
+
+# HuggingFace cache
 HF_CACHE_DIR = "/omnilaunch/hf_cache"
 
 # ============================================================================
@@ -59,7 +70,7 @@ image = (
 
 
 # ============================================================================
-# Helper Functions (Module-level)
+# Helper Functions
 # ============================================================================
 
 def pil_image_to_base64(img) -> str:
@@ -84,23 +95,54 @@ def pil_image_to_base64(img) -> str:
     timeout=3600
 )
 def download_files() -> Dict[str, str]:
-    """Download SDXL base model."""
-    from huggingface_hub import snapshot_download
-
-    if not os.path.exists(MODEL_INDEX_FILE):
-        print(f"Downloading {HF_MODEL_REPO} to {MODEL_PATH}...")
+    """Download SDXL base model + custom VAE + SPO LoRA."""
+    from huggingface_hub import snapshot_download, hf_hub_download
+    
+    results = {}
+    
+    # 1. SDXL base model
+    if not os.path.exists(BASE_MODEL_INDEX_FILE):
+        print(f"Downloading {HF_BASE_MODEL_REPO}...")
         snapshot_download(
-            HF_MODEL_REPO,
-            local_dir=MODEL_PATH,
+            HF_BASE_MODEL_REPO,
+            local_dir=BASE_MODEL_PATH,
             local_dir_use_symlinks=False,
             ignore_patterns=["*.onnx", "*.onnx_data"]
         )
-        print("Download complete.")
+        print("✓ SDXL base downloaded")
     else:
-        print(f"Model already exists at {MODEL_PATH}")
-
+        print("✓ SDXL base already cached")
+    results["base_model"] = BASE_MODEL_PATH
+    
+    # 2. Custom VAE (fp16 fix)
+    if not os.path.exists(VAE_CONFIG_FILE):
+        print(f"Downloading {HF_VAE_REPO}...")
+        snapshot_download(
+            HF_VAE_REPO,
+            local_dir=VAE_PATH,
+            local_dir_use_symlinks=False
+        )
+        print("✓ Custom VAE downloaded")
+    else:
+        print("✓ Custom VAE already cached")
+    results["vae"] = VAE_PATH
+    
+    # 3. SPO LoRA
+    if not os.path.exists(SPO_LORA_PATH):
+        print(f"Downloading {HF_SPO_LORA_REPO}...")
+        os.makedirs(SPO_LORA_DIR, exist_ok=True)
+        hf_hub_download(
+            repo_id=HF_SPO_LORA_REPO,
+            filename=SPO_LORA_FILENAME,
+            local_dir=SPO_LORA_DIR
+        )
+        print("✓ SPO LoRA downloaded")
+    else:
+        print("✓ SPO LoRA already cached")
+    results["spo_lora"] = SPO_LORA_PATH
+    
     omnilaunch_vol.commit()
-    return {"ok": True, "model_path": MODEL_PATH}
+    return {"ok": True, **results}
 
 
 @app.function(
@@ -109,47 +151,44 @@ def download_files() -> Dict[str, str]:
     timeout=1800
 )
 def setup(run_downloads: bool = True) -> Dict[str, Any]:
-    """Prepare SDXL runner on Modal: verify env and optionally cache models.
-
-    - Verifies torch/cuda/diffusers
-    - Ensures /omnilaunch volume is mounted
-    - Calls download_files() to cache SDXL base model (if run_downloads=True)
-    """
+    """Prepare SPO runner: verify env and download models."""
     import importlib
     from diffusers import __version__ as diffusers_version
-
+    
     torch_present = importlib.util.find_spec("torch") is not None
     torch_version = None
     cuda_available = False
-    cuda_device_count = 0
+    
     if torch_present:
-        # Import inside, then extract only primitive values to avoid returning torch types
         import torch as _torch
         torch_version = str(_torch.__version__)
         cuda_available = bool(_torch.cuda.is_available())
-        cuda_device_count = int(_torch.cuda.device_count()) if _torch.cuda.is_available() else 0
         del _torch
-
+    
     checks = {
         "torch_present": bool(torch_present),
         "torch_version": torch_version,
         "cuda_available": bool(cuda_available),
-        "cuda_device_count": int(cuda_device_count),
         "diffusers_version": str(diffusers_version),
         "volume_mounted": os.path.exists("/omnilaunch"),
-        "model_present_before": os.path.exists(MODEL_INDEX_FILE),
+        "base_model_present": os.path.exists(BASE_MODEL_INDEX_FILE),
+        "vae_present": os.path.exists(VAE_CONFIG_FILE),
+        "spo_lora_present": os.path.exists(SPO_LORA_PATH),
     }
-
+    
     try:
         if run_downloads:
-            # Call download_files.local() to execute in the same container
             dl_result = download_files.local()
             checks["download_result"] = dl_result
-            checks["model_present_after"] = os.path.exists(MODEL_INDEX_FILE)
-        else:
-            checks["model_present_after"] = checks["model_present_before"]
+            checks["base_model_present"] = os.path.exists(BASE_MODEL_INDEX_FILE)
+            checks["vae_present"] = os.path.exists(VAE_CONFIG_FILE)
+            checks["spo_lora_present"] = os.path.exists(SPO_LORA_PATH)
         
-        ok = checks["volume_mounted"] and checks["model_present_after"]
+        ok = (checks["volume_mounted"] and 
+              checks["base_model_present"] and 
+              checks["vae_present"] and 
+              checks["spo_lora_present"])
+        
         return {"ok": ok, "checks": checks}
     except Exception as e:
         return {"ok": False, "error": str(e), "checks": checks}
@@ -163,18 +202,13 @@ def setup(run_downloads: bool = True) -> Dict[str, Any]:
     scaledown_window=2
 )
 def infer(params: Dict[str, Any]) -> Dict[str, Any]:
-    """SDXL base model inference.
+    """SDXL SPO inference with aesthetic optimization.
     
-    params: {
-      prompt: str,
-      negative_prompt?: str,
-      width?: int, height?: int,
-      steps?: int, guidance_scale?: float, seed?: int
-    }
+    Based on: https://huggingface.co/SPO-Diffusion-Models/SPO-SDXL_4k-p_10ep_LoRA
     """
     import torch
-    from diffusers import DiffusionPipeline
-
+    from diffusers import DiffusionPipeline, AutoencoderKL
+    
     # Parse params
     prompt = str(params.get("prompt", "")).strip()
     if not prompt:
@@ -184,28 +218,42 @@ def infer(params: Dict[str, Any]) -> Dict[str, Any]:
     width = int(params.get("width", 1024))
     height = int(params.get("height", 1024))
     steps = int(params.get("steps", 25))
-    guidance_scale = float(params.get("guidance_scale", 7.5))
+    guidance_scale = float(params.get("guidance_scale", 5.0))
     seed = int(params.get("seed", 42))
-
+    
     # Load base pipeline
-    print(f"Loading SDXL base pipeline from {MODEL_PATH}...")
+    print(f"Loading SDXL base pipeline...")
     pipe = DiffusionPipeline.from_pretrained(
-        MODEL_PATH,
+        BASE_MODEL_PATH,
         torch_dtype=torch.float16,
         use_safetensors=True,
         variant="fp16",
         local_files_only=True
     )
+    
+    # Load custom VAE (fp16 fix)
+    print("Loading custom VAE...")
+    vae = AutoencoderKL.from_pretrained(
+        VAE_PATH,
+        torch_dtype=torch.float16,
+        local_files_only=True
+    )
+    pipe.vae = vae
+    
+    # Load SPO LoRA
+    print("Loading SPO LoRA...")
+    pipe.load_lora_weights(SPO_LORA_PATH)
+    
     pipe.to("cuda")
     
     # Optional: enable memory optimizations
     try:
         pipe.enable_xformers_memory_efficient_attention()
     except Exception:
-        print("[-] NOTE: XFormers memory efficient attention not available")
-
+        print("[-] XFormers not available")
+    
     # Generate
-    print(f"Generating image: {prompt[:50]}...")
+    print(f"Generating: {prompt[:50]}...")
     gen = torch.Generator(device="cuda").manual_seed(seed)
     
     with torch.inference_mode():
@@ -219,7 +267,6 @@ def infer(params: Dict[str, Any]) -> Dict[str, Any]:
             generator=gen,
         )
     
-    # Return single-payload: content_type + base64 data
     img_b64 = pil_image_to_base64(result.images[0])
     return {
         "content_type": "image/png",
@@ -229,3 +276,4 @@ def infer(params: Dict[str, Any]) -> Dict[str, Any]:
 
 if __name__ == "__main__":
     app.deploy()
+

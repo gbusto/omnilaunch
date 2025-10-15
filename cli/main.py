@@ -297,6 +297,7 @@ def cmd_run(args: argparse.Namespace) -> int:
             except Exception as e:
                 print(f"[run] params validation failed: {e}", file=sys.stderr)
                 return 3
+        
         # Invoke Modal function
         try:
             import modal, base64, mimetypes
@@ -389,9 +390,73 @@ def cmd_doctor(_args: argparse.Namespace) -> int:
     return 0 if ok else 1
 
 
+def cmd_list(_args: argparse.Namespace) -> int:
+    """List available runners from the registry."""
+    registry_root = Path(__file__).parent.parent / "registry"
+    index_path = registry_root / "index.json"
+    
+    if not index_path.exists():
+        print("[list] No registry index found. Run 'omni build' to register runners.", file=sys.stderr)
+        return 1
+    
+    try:
+        index = json.loads(index_path.read_text(encoding="utf-8"))
+        runners = index.get("runners", [])
+        
+        if not runners:
+            print("[list] No runners registered yet. Run 'omni build <path>' to add one.")
+            return 0
+        
+        print(f"[list] Available runners ({len(runners)}):\n")
+        
+        # Sort by name for consistent output
+        runners_sorted = sorted(runners, key=lambda r: r.get("name", ""))
+        
+        for runner in runners_sorted:
+            name = runner.get("name", "unknown")
+            latest = runner.get("latest", "N/A")
+            versions = runner.get("versions", {})
+            
+            # Try to get GPU from runner metadata (read from bundle_path or manifest)
+            # For now, we'll read from the runner.yaml if available
+            gpu = "N/A"
+            try:
+                # Parse name to get directory path
+                runner_dir = registry_root / name.replace("omnilaunch/", "")
+                runner_yaml = runner_dir / "runner.yaml"
+                if runner_yaml.exists():
+                    import yaml
+                    meta = yaml.safe_load(runner_yaml.read_text())
+                    gpu = meta.get("gpu", "N/A")
+            except Exception:
+                pass
+            
+            version_list = sorted(versions.keys()) if versions else []
+            
+            print(f"  {name}")
+            print(f"    Latest: {latest}")
+            print(f"    Versions: {', '.join(version_list)}")
+            print(f"    GPU: {gpu}")
+            print()
+        
+        return 0
+        
+    except Exception as e:
+        print(f"[list] Failed to read registry: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc()
+        return 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="omni", description="Omnilaunch CLI")
     sub = p.add_subparsers(dest="command", required=True)
+
+    p_doctor = sub.add_parser("doctor", help="Check local environment")
+    p_doctor.set_defaults(func=cmd_doctor)
+
+    p_list = sub.add_parser("list", help="List available runners from registry")
+    p_list.set_defaults(func=cmd_list)
 
     p_build = sub.add_parser("build", help="Build a runner bundle")
     p_build.add_argument("path", help="Path to runner folder")
@@ -412,9 +477,6 @@ def build_parser() -> argparse.ArgumentParser:
     p_run.add_argument("--outdir", help="Directory for saved outputs (default: ./omni_out)")
     p_run.add_argument("--outfile", help="Explicit output filename (e.g., result.png)")
     p_run.set_defaults(func=cmd_run)
-
-    p_doc = sub.add_parser("doctor", help="Check local environment")
-    p_doc.set_defaults(func=cmd_doctor)
 
     return p
 

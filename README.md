@@ -52,11 +52,14 @@ omni run omnilaunch/sdxl:0.1.0 infer \
 
 The generated image is saved to `./omni_out/result.png` (or your specified path).
 
+**Note:** This runner uses SDXL base model only. For LoRA/custom variants (e.g., pixel-art, SPO), create separate runners as each requires custom setup (VAE, adapters, specific hyperparameters).
+
 ## CLI Commands
 
 | Command | Description |
 |---------|-------------|
 | `omni doctor` | Check local environment and credentials |
+| `omni list` | List available runners from the registry |
 | `omni build <path>` | Package a runner into a versioned bundle |
 | `omni setup <runner:version>` | Deploy app, build image, download models |
 | `omni run <runner:version> <entrypoint>` | Execute training or inference |
@@ -76,19 +79,43 @@ The generated image is saved to `./omni_out/result.png` (or your specified path)
 # 1. Validate environment
 omni doctor
 
-# 2. Build the SDXL runner
+# 2. List available runners
+omni list
+
+# 3. Build a runner (if not already built)
 omni build omnilaunch/registry/sdxl/
 
-# 3. Setup on Modal (deploys app + downloads models)
+# 4. Setup on Modal (deploys app + downloads models)
 omni setup omnilaunch/sdxl:0.1.0
 
-# 4. Run inference and save output
+# 5. Run inference and save output
 omni run omnilaunch/sdxl:0.1.0 infer \
   -p prompt="a magical forest with glowing mushrooms" \
   -p steps=30 \
   --save --outfile forest.png
 
 # Output saved to: ./omni_out/forest.png
+```
+
+### Using Different Runners
+
+```bash
+# List all available runners
+omni list
+
+# Pixel-art style
+omni build omnilaunch/registry/sdxl-pixel-art/
+omni setup omnilaunch/sdxl-pixel-art:0.1.0
+omni run omnilaunch/sdxl-pixel-art:0.1.0 infer \
+  -p prompt="a cute robot" \
+  --save
+
+# Aesthetic-optimized (SPO)
+omni build omnilaunch/registry/sdxl-spo/
+omni setup omnilaunch/sdxl-spo:0.1.0
+omni run omnilaunch/sdxl-spo:0.1.0 infer \
+  -p prompt="serene landscape" \
+  --save
 ```
 
 ## What's a Runner?

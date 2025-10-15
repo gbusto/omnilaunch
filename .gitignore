@@ -28,6 +28,7 @@ Thumbs.db
 
 # Omnilaunch specific
 # Keep registry source files, but ignore built bundles and temp files
-registry/*/*/runner.tar.gz
-registry/*/*/manifest.json
+**/runner.tar.gz
+**/manifest.json
+registry/omnilaunch/
 *.pyc

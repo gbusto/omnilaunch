@@ -7,7 +7,27 @@
       "versions": {
         "0.1.0": {
           "path": "/Users/gabrielbusto/projects/fun-apps/training-data-repo/omnilaunch/registry/omnilaunch/sdxl/0.1.0/runner.tar.gz",
-          "sha256": "2a1f612ee5519ce7d12da048bc8fd631bca80f5b5e1321ce49ad4e9caa5ff388"
+          "sha256": "bd37bd4857e843f95b4809d138f003f0242cd36fb64d31d8508e00fd276a9ad4"
+        }
+      }
+    },
+    {
+      "name": "omnilaunch/sdxl-pixel-art",
+      "latest": "0.1.0",
+      "versions": {
+        "0.1.0": {
+          "path": "/Users/gabrielbusto/projects/fun-apps/training-data-repo/omnilaunch/registry/omnilaunch/sdxl-pixel-art/0.1.0/runner.tar.gz",
+          "sha256": "ff4b68ad95693d614586d707c104da87963125b9a8d4aa0ae470db252fb57a2a"
+        }
+      }
+    },
+    {
+      "name": "omnilaunch/sdxl-spo",
+      "latest": "0.1.0",
+      "versions": {
+        "0.1.0": {
+          "path": "/Users/gabrielbusto/projects/fun-apps/training-data-repo/omnilaunch/registry/omnilaunch/sdxl-spo/0.1.0/runner.tar.gz",
+          "sha256": "31d782e5c988ece84c3e825de8c6a3da0fa674f419f49ea20a90dc652ec06e37"
         }
       }
     }
