@@ -1,6 +1,6 @@
 name: omnilaunch/gpt-oss-20b
 version: "0.1.0"
-gpu: "A100-40GB"
+gpu: "H100"
 volume: "omnilaunch"
 app_name: "omnilaunch-gpt-oss-20b"
 entrypoints:

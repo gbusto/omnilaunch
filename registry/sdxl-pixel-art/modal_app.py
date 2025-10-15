@@ -223,7 +223,7 @@ def infer(params: Dict[str, Any]) -> Dict[str, Any]:
     negative = str(params.get("negative_prompt", "3d render, realistic"))
     width = int(params.get("width", 1024))
     height = int(params.get("height", 1024))
-    steps = int(params.get("steps", 8))  # Optimized for LCM
+    steps = int(params.get("steps", 25))  # Optimized for LCM
     guidance_scale = float(params.get("guidance_scale", 1.5))  # Optimized for LCM
     seed = int(params.get("seed", 42))
     lora_strength = float(params.get("lora_strength", 1.2))
