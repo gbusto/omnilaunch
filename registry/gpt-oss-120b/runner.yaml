@@ -1,0 +1,20 @@
+name: omnilaunch/gpt-oss-120b
+version: "0.1.0"
+volume: "omnilaunch"
+app_name: "omnilaunch-gpt-oss-120b"
+entrypoints:
+  download_files:
+    function: modal_app.py::download_files
+    gpu: null
+  setup:
+    function: modal_app.py::setup
+    gpu: null
+  infer:
+    function: modal_app.py::infer
+    gpu: "H100"
+    schema: schema/infer.json
+dataset_schema: schema/dataset.json
+compat:
+  python: ">=3.10,<3.13"
+  cuda: "12.1"
+

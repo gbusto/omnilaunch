@@ -40,6 +40,16 @@
           "sha256": "60714fda0d0f3dec8038df760f6081d1a32ac7e69f48a269fc91666317507fb9"
         }
       }
+    },
+    {
+      "name": "omnilaunch/gpt-oss-120b",
+      "latest": "0.1.0",
+      "versions": {
+        "0.1.0": {
+          "path": "/Users/gabrielbusto/projects/fun-apps/training-data-repo/omnilaunch/registry/omnilaunch/gpt-oss-120b/0.1.0/runner.tar.gz",
+          "sha256": "9c4991fbadc5dd849bc7f2aad3b8e1b6eae360ae4327644d1b83424fa55170d1"
+        }
+      }
     }
   ]
 }
