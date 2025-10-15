@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GPT-OSS-20B Inference Parameters",
+  "type": "object",
+  "properties": {
+    "messages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "role": { "type": "string", "enum": ["system", "user", "assistant"] },
+          "content": { "type": "string" }
+        },
+        "required": ["role", "content"]
+      },
+      "description": "Chat messages in OpenAI format"
+    },
+    "max_tokens": { "type": "integer", "minimum": 1, "description": "Max new tokens to generate" },
+    "temperature": { "type": "number", "minimum": 0, "maximum": 2 },
+    "reasoning_level": { "type": "string", "enum": ["low", "medium", "high"], "description": "Adjust reasoning depth" }
+  },
+  "required": ["messages"],
+  "additionalProperties": false
+}
+
