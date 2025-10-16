@@ -15,6 +15,8 @@ Run any model, anywhere, reproducibly. One CLI (`omni run <runner> <entrypoint>`
 
 ## ⚡ Quick Start (90 seconds)
 
+Follow the [Modal account setup](./docs/MODAL_SETUP.md) guide first, then you can run this quickstart. Modal account setup will literally take you less than 2 minutes. You don't even need to enter your credit card if you don't want to! But I would recommend it to unlock the free $30/mo of free usage (they're basically *paying* you to use their platform!).
+
 ```bash
 # 1. Install
 pip install -e omnilaunch/
