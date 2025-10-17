@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "dataset_uri": {
+      "type": "string",
+      "description": "Dataset URI (hf:org/dataset). Default: hf:unsloth/LaTeX_OCR",
+      "default": "hf:unsloth/LaTeX_OCR"
+    }
+  }
+}
+

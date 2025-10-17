@@ -288,16 +288,37 @@ def cmd_run(args: argparse.Namespace) -> int:
                 print(f"[run] failed to parse --params: {e}", file=sys.stderr)
                 return 3
         # Merge -p/--param key=value overrides
-        def _parse_value(v: str):
+        def _parse_value(v: str, key: str = ""):
+            """Parse value, auto-encoding files for image/file parameters."""
             vl = v.strip()
+            
+            # Auto-detect and encode image/file parameters
+            if key.lower() in ("image", "image_input", "file", "attachment"):
+                # Check if it's a local file path
+                try:
+                    p = Path(vl)
+                    if p.exists() and p.is_file():
+                        # Base64 encode the file
+                        import base64
+                        print(f"[run] auto-encoding file '{vl}' to base64 for parameter '{key}'", file=sys.stderr)
+                        with open(p, "rb") as f:
+                            encoded = base64.b64encode(f.read()).decode("utf-8")
+                        return encoded
+                except Exception:
+                    pass  # Not a file, treat as string
+            
+            # Parse as boolean
             if vl.lower() in ("true", "false"):
                 return vl.lower() == "true"
+            
+            # Parse as number
             try:
                 if "." in vl:
                     return float(vl)
                 return int(vl)
             except Exception:
                 return vl
+        
         if getattr(args, "param", None):
             for kv in args.param:
                 if "=" not in kv:
@@ -305,7 +326,7 @@ def cmd_run(args: argparse.Namespace) -> int:
                     continue
                 key, val = kv.split("=", 1)
                 key = key.strip()
-                params_obj[key] = _parse_value(val)
+                params_obj[key] = _parse_value(val, key)
         # Validate if schema exists
         if schema_path.exists():
             try:

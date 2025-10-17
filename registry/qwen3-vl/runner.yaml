@@ -1,0 +1,28 @@
+name: omnilaunch/qwen3-vl
+version: "0.1.0"
+volume: "omnilaunch"
+app_name: "omnilaunch-qwen3-vl"
+entrypoints:
+  download_files:
+    function: modal_app.py::download_files
+    gpu: null
+  download_dataset:
+    function: modal_app.py::download_dataset
+    gpu: null
+    schema: schema/download_dataset.json
+  setup:
+    function: modal_app.py::setup
+    gpu: null
+  infer:
+    function: modal_app.py::infer
+    gpu: "A10G"
+    schema: schema/infer.json
+  train_lora:
+    function: modal_app.py::train_lora
+    gpu: "A10G"
+    schema: schema/train_lora.json
+dataset_schema: schema/dataset.json
+compat:
+  python: ">=3.10,<3.12"
+  cuda: "12.1"
+

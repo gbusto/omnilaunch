@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["image", "prompt"],
+  "properties": {
+    "image": {
+      "type": "string",
+      "description": "Base64 encoded image (with or without data URI prefix) or file path"
+    },
+    "prompt": {
+      "type": "string",
+      "description": "Text prompt/question about the image"
+    },
+    "lora_run": {
+      "type": "string",
+      "description": "Optional: Run name of trained LoRA to use (e.g. 'brave-lion-1234')"
+    },
+    "max_tokens": {
+      "type": "integer",
+      "default": 128,
+      "description": "Maximum number of tokens to generate"
+    },
+    "temperature": {
+      "type": "number",
+      "default": 1.5,
+      "description": "Sampling temperature (0 for greedy)"
+    },
+    "min_p": {
+      "type": "number",
+      "default": 0.1,
+      "description": "Minimum probability threshold for sampling"
+    }
+  }
+}
+

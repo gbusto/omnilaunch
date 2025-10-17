@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["dataset_uri"],
+  "properties": {
+    "dataset_uri": {
+      "type": "string",
+      "description": "Dataset URI (hf:org/dataset or path). Default: hf:unsloth/LaTeX_OCR",
+      "default": "hf:unsloth/LaTeX_OCR"
+    },
+    "run_name": {
+      "type": "string",
+      "description": "Optional: Human-readable run name (e.g. 'my-latex-model'). Auto-generated if not provided."
+    },
+    "steps": {
+      "type": "integer",
+      "default": 30,
+      "description": "Number of training steps"
+    },
+    "epochs": {
+      "type": "number",
+      "description": "Optional. If provided, compute steps ≈ epochs * N / (bs * gas)"
+    },
+    "max_train_samples": {
+      "type": "integer",
+      "description": "Optional. Limit training set size for quick tests"
+    },
+    "learning_rate": {
+      "type": "number",
+      "default": 0.0002,
+      "description": "Learning rate"
+    },
+    "lora_r": {
+      "type": "integer",
+      "default": 16,
+      "description": "LoRA rank"
+    },
+    "lora_alpha": {
+      "type": "integer",
+      "default": 16,
+      "description": "LoRA alpha (recommended: same as r)"
+    },
+    "batch_size": {
+      "type": "integer",
+      "default": 2,
+      "description": "Per-device training batch size"
+    },
+    "gradient_accumulation_steps": {
+      "type": "integer",
+      "default": 4,
+      "description": "Gradient accumulation steps"
+    },
+    "instruction": {
+      "type": "string",
+      "default": "Write the LaTeX representation for this image.",
+      "description": "Instruction text for the vision task"
+    }
+  }
+}
+

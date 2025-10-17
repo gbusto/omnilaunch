@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "description": "Vision-language dataset format for Qwen3-VL",
+  "properties": {
+    "format": {
+      "type": "string",
+      "enum": ["vision_conversation"],
+      "description": "Dataset format type"
+    },
+    "fields": {
+      "type": "object",
+      "properties": {
+        "image": {
+          "type": "string",
+          "description": "Field name containing the image data"
+        },
+        "text": {
+          "type": "string",
+          "description": "Field name containing the text/caption/answer"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "format": "vision_conversation",
+      "fields": {
+        "image": "image",
+        "text": "text"
+      }
+    }
+  ]
+}
+
