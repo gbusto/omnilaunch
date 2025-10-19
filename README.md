@@ -106,9 +106,15 @@ omni run omnilaunch/gpt-oss-120b:0.1.0 infer \
   -p reasoning_level=high \
   -p max_tokens=1024 \
   --save
+
+# Benchmark on tinyMMLU (60% accuracy on 10 samples, ~$0.12)
+omni run omnilaunch/gpt-oss-20b:0.1.0 benchmark_tinymmlu \
+  -p max_items=10 \
+  -p reasoning_level=low \
+  --save --outfile benchmark.json
 ```
 
-Returns structured JSON with `response`, `analysis` (internal reasoning), and `commentary` (meta-observations).
+Returns structured JSON with `response`, `analysis` (internal reasoning), and `commentary` (meta-observations). Benchmarking returns accuracy metrics, per-subject breakdown, and sample predictions.
 
 ### 🎨 **Image Generation**
 Multiple SDXL variants ready to use:
@@ -154,29 +160,48 @@ omni run omnilaunch/trellis:0.1.0 infer \
   --save
 ```
 
-### 🔧 **Fine-tuning** *(coming soon)*
-```bash
-# SDXL LoRA for personalized images
-omni run omnilaunch/hunyuanimage-3.0:0.2.0 train_lora \
-  --dataset hf:yourname/photos \
-  -p subject="sks person" \
-  -p steps=1000
+### 🔧 **Fine-tuning Vision-Language Models**
+Train Qwen3-VL-8B on custom datasets with LoRA:
 
-# Use your trained LoRA
-omni run omnilaunch/hunyuanimage-3.0:0.2.0 infer \
-  -p prompt="sks person as an astronaut" \
-  -p lora_path="/omnilaunch/runs/hunyuanimage-3.0-lora-xyz/model.safetensors" \
+```bash
+# Fine-tune on LaTeX OCR dataset (200 samples, ~8 min, ~$0.13)
+omni run omnilaunch/qwen3-vl:0.1.0 train_lora \
+  -p dataset_uri="unsloth/LaTeX_OCR" \
+  -p epochs=1 \
+  -p max_train_samples=200 \
+  --save --outfile training_results.json
+
+# Inference with your trained LoRA
+omni run omnilaunch/qwen3-vl:0.1.0 infer \
+  -p image="handwritten_math.png" \
+  -p prompt="Convert this to LaTeX" \
+  -p lora_run="brave-lion-1234" \
+  --save --outfile output.json
+
+# Pre-cache datasets on CPU (free!)
+omni run omnilaunch/qwen3-vl:0.1.0 download_dataset \
+  -p dataset_uri="unsloth/LaTeX_OCR"
+```
+
+LoRA adapters are saved with human-readable names (e.g., "brave-lion-1234") to `/omnilaunch/runs/qwen3-vl/`. Supports WandB integration for tracking metrics.
+
+### 🔬 **Benchmarking**
+Evaluate models on standard datasets:
+
+```bash
+# GPT-OSS-20B on tinyMMLU (100 samples, ~65 min, ~$1.19)
+omni run omnilaunch/gpt-oss-20b:0.1.0 benchmark_tinymmlu \
+  -p max_items=100 \
+  -p reasoning_level=low \
+  --save --outfile results.json
+
+# Quick sanity check (10 samples, ~6.5 min, ~$0.12)
+omni run omnilaunch/gpt-oss-20b:0.1.0 benchmark_tinymmlu \
+  -p max_items=10 \
   --save
 ```
 
-### 🔬 **Benchmarking** *(coming soon)*
-```bash
-# Run MMLU benchmark
-omni run omnilaunch/gpt-oss-20b-bench:0.1.0 eval_mmlu \
-  --save --outfile results.json
-
-# Results include reproducible metrics
-```
+Results include overall accuracy, per-subject breakdown, sample predictions, and full reproducibility metadata.
 
 ### 📋 **List All Runners**
 ```bash
@@ -273,16 +298,19 @@ Every run produces a signed manifest *(coming soon)*:
 
 **✅ Available Now (v0.1):**
 - LLM inference (GPT-OSS-20B/120B with reasoning)
+- LLM benchmarking (tinyMMLU with reproducible results)
+- Vision-language fine-tuning (Qwen3-VL-8B with LoRA)
 - Image generation (SDXL + pixel-art + SPO variants)
 - Modal deployment & execution
 - CLI: `build`, `setup`, `run`, `list`, `doctor`
 - Reproducible manifests with pinned dependencies
+- WandB integration for training metrics
 
 **🔄 In Progress (v0.2):**
 - Audio generation (TTS, music)
 - 3D generation (text/image to mesh)
-- Fine-tuning (SDXL LoRA, LLM LoRA)
-- Benchmarking runners (MMLU, GSM8K)
+- More fine-tuning runners (SDXL LoRA, LLM LoRA)
+- More benchmarking datasets (full MMLU, GSM8K, HumanEval)
 - Production serving (`omni serve` with vLLM)
 
 **📋 Planned (v0.3+):**
@@ -369,15 +397,20 @@ Go from idea to product in hours, not months.
 Model-specific, reproducible evaluation:
 
 ```bash
-# Benchmark runner with targeted entrypoints
-omni run omnilaunch/gpt-oss-20b-bench:0.1.0 mmlu
-omni run omnilaunch/gpt-oss-20b-bench:0.1.0 gsm8k
+# Available now: tinyMMLU for GPT-OSS models
+omni run omnilaunch/gpt-oss-20b:0.1.0 benchmark_tinymmlu \
+  -p max_items=100 \
+  --save --outfile results.json
+
+# Coming soon: more benchmarks
+omni run omnilaunch/gpt-oss-20b:0.1.0 benchmark_gsm8k
+omni run omnilaunch/gpt-oss-20b:0.1.0 benchmark_humaneval
 omni run omnilaunch/diffusion-bench:0.1.0 fid --dataset coco
 
 # → Signed results feed reproducible leaderboards
 ```
 
-Each benchmark runner targets a model family. Simple, clear, verifiable.
+Each benchmark includes full provenance: model version, dataset version, parameters, and hardware specs. Verifiable, reproducible results.
 
 ### 🔏 **Compliance & Governance**
 Full audit trail for every execution — dataset versions, code revisions, environment hashes, GPU specs. Verifiable lineage for regulatory compliance and transparency.
