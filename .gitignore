@@ -32,3 +32,5 @@ Thumbs.db
 **/manifest.json
 registry/omnilaunch/
 *.pyc
+
+registry/index.json
