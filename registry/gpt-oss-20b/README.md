@@ -73,6 +73,74 @@ omni run omnilaunch/gpt-oss-20b:0.1.0 infer \
 Downloads model weights to the Modal volume (runs automatically during `setup`).
 
 ### `setup`
+### `benchmark_tinymmlu`
+
+Evaluate the model on the tinyBenchmarks/tinyMMLU dataset (100 examples). Fast, lightweight benchmark for sanity-checking reasoning performance.
+
+**Parameters:**
+- `split` (default: `"test"`): `"test"` or `"dev"`
+- `max_items` (default: `100`): Limit number of items
+- `batch_size` (default: `8`)
+- `max_new_tokens` (default: `1`): Single-token answer decoding (A/B/C/D)
+- `temperature` (default: `0.0`): Greedy decoding
+- `use_formatted` (default: `true`): Use dataset `input_formatted` prompt
+
+**Usage:**
+```bash
+# Standard eval (matches paper setup: harmony format + reasoning:high + log-likelihood)
+omni run omnilaunch/gpt-oss-20b:0.1.0 benchmark_tinymmlu \
+  --save --outfile tinymmlu.json
+
+# Custom reasoning level
+omni run omnilaunch/gpt-oss-20b:0.1.0 benchmark_tinymmlu \
+  -p reasoning_level=medium \
+  --save --outfile tinymmlu_medium.json
+
+# Quick test (first 20 items)
+omni run omnilaunch/gpt-oss-20b:0.1.0 benchmark_tinymmlu \
+  -p max_items=20 \
+  --save --outfile quick_test.json
+```
+
+**Method:** Reuses `infer` endpoint logic for consistency:
+- Same harmony chat format and parsing as `infer`
+- System prompt with `Reasoning: low` (configurable)
+- Greedy decoding (temp=0, max 32 tokens)
+- Extracts answer letter from parsed response field
+
+**Output:**
+```json
+{
+  "ok": true,
+  "items": 100,
+  "overall_accuracy": 0.68,
+  "correct": 68,
+  "per_subject_accuracy": {"math": 0.65, "biology": 0.72, ...},
+  "samples": [
+    {
+      "prompt_end": "...",
+      "generated_raw": "<|channel|>analysis<|message|>...<|channel|>final<|message|>B<|return|>",
+      "response": "B",
+      "analysis": "...",
+      "pred": "B",
+      "gt": "B",
+      "subject": "math"
+    }
+  ],
+  "elapsed_seconds": 180.5,
+  "config": {
+    "split": "test",
+    "max_items": 100,
+    "reasoning_level": "low",
+    "method": "reuses_infer_logic"
+  }
+}
+```
+
+**Note:** TinyMMLU is a 100-item subset of MMLU with different distribution, so expect lower/noisier scores vs. the paper's full MMLU results (~85% for gpt-oss-20b @ high reasoning on full MMLU).
+
+Dataset: `tinyBenchmarks/tinyMMLU` ([link](https://huggingface.co/datasets/tinyBenchmarks/tinyMMLU))
+
 
 Verifies environment and downloads model if needed.
 
@@ -83,8 +151,21 @@ Verifies environment and downloads model if needed.
 | Setup (first time) | N/A (CPU) | ~5-8 min | ~$0.005 |
 | `infer` (256 tokens; medium reasoning) | A10G | ~1 min | ~$0.018 |
 | `infer` (~1k tokens; medium reasoning) | A10G | ~1-2 min | ~$0.028 |
+| `benchmark_tinymmlu` (10 items) | A10G | ~6.5 min | ~$0.12 |
+| `benchmark_tinymmlu` (100 items) | A10G | ~65 min | ~$1.19 |
 
 *Inference is meant to be used for quick testing, so it releases the GPU after each response. This means it incurs a slight cost for cold start on each `run` call. I plan to add a `serve` function for optimized, fast inference.
+
+**Benchmark Results (10-sample tinyMMLU, reasoning_level=low):**
+- **Accuracy**: 60% (6/10 correct)
+- **Total time**: 392.1s (6.5 min)
+- **Per-question**: ~39 sec/question (after model load)
+- **Cost estimate**: ~$0.11 for 10 items, ~$1.08 for full 100 items
+
+**Estimated 100-sample run:**
+- Model loading: ~9s (one-time)
+- 100 questions × 39s = 3,900s (65 min)
+- Total: ~65 min (~$1.08 on A10G @ $0.99/hr)
 
 ## Harmony Format
 

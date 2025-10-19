@@ -3,6 +3,8 @@
 > **The execution layer for reproducible AI**  
 > Run any model, anywhere, reproducibly — training, inference, fine-tuning, benchmarking.
 
+In short, reproducible AI workflows. Or said another, more salesy way: Docker for AI workflows. The workflow could simply be "run this open source AI model", "train that open source AI model", "benchmark this AI model with that benchmark dataset", or all of the above in one. We accomplish this by using Modal + HuggingFace, and a simple cli contract: `omni run <runner> <params>`.
+
 ---
 
 ## 🎯 The Vision

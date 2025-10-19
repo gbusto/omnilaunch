@@ -13,6 +13,10 @@ entrypoints:
     function: modal_app.py::infer
     gpu: "A10G"
     schema: schema/infer.json
+  benchmark_tinymmlu:
+    function: modal_app.py::benchmark_tinymmlu
+    gpu: "A10G"
+    schema: schema/benchmark_tinymmlu.json
 dataset_schema: schema/dataset.json
 compat:
   python: ">=3.10,<3.13"

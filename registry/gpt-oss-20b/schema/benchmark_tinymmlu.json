@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "split": {
+      "type": "string",
+      "enum": ["test", "dev"],
+      "default": "test",
+      "description": "Dataset split to evaluate"
+    },
+    "max_items": {
+      "type": "integer",
+      "default": 100,
+      "description": "Maximum number of items to evaluate"
+    },
+    "reasoning_level": {
+      "type": "string",
+      "enum": ["low", "medium", "high"],
+      "default": "low",
+      "description": "Reasoning level for GPT-OSS (low=faster, high=more thorough)"
+    }
+  }
+}
