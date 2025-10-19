@@ -37,6 +37,21 @@ def _read_name_version(runner_dir: Path) -> tuple[str, str]:
     return name, version
 
 
+def _slug_from_name(name: str) -> str:
+    """Convert a runner name like 'omnilaunch/sdxl' to a slug 'sdxl'."""
+    return name.replace("omnilaunch/", "")
+
+
+def _bundle_path_for(registry_root: Path, name: str, version: str) -> Path:
+    """Compute local bundle tar path for a runner name+version.
+
+    Expected on-disk layout:
+      registry/omnilaunch/<slug>/<version>/runner.tar.gz
+    """
+    slug = _slug_from_name(name)
+    return registry_root / "omnilaunch" / slug / version / "runner.tar.gz"
+
+
 def _parse_runner_ref(ref: str) -> tuple[str, str | None]:
     """Parse runner ref like 'omnilaunch/sdxl:0.1.0' into (name, version?).
     Returns (name, None) if no version specified.
@@ -167,26 +182,25 @@ def cmd_build(args: argparse.Namespace) -> int:
 
 def cmd_setup(args: argparse.Namespace) -> int:
     print(f"[omni setup] runner={args.runner}")
-    # Resolve app name from runner.yaml then call setup() on Modal
-    index_path = Path(__file__).resolve().parents[1] / "registry" / "index.json"
-    try:
-        index = json.loads(index_path.read_text(encoding="utf-8"))
-    except Exception as e:
-        print(f"[setup] cannot read index: {e}", file=sys.stderr)
-        return 2
+    # Resolve bundle path directly from name/version and run setup via Modal
+    registry_root = Path(__file__).resolve().parents[1] / "registry"
     req_name, req_ver = _parse_runner_ref(args.runner)
-    entry = next((r for r in index.get("runners", []) if r.get("name") == req_name), None)
-    if not entry:
-        print(f"[setup] runner not found in index: {args.runner}", file=sys.stderr)
+
+    # If version not specified, read from source runner.yaml
+    if not req_ver:
+        runner_dir = registry_root / req_name.replace("omnilaunch/", "")
+        if not runner_dir.exists():
+            print(f"[setup] runner not found: {req_name}", file=sys.stderr)
+            return 3
+        _, req_ver = _read_name_version(runner_dir)
+    if not req_ver:
+        print(f"[setup] could not determine version for {req_name}", file=sys.stderr)
         return 3
-    version = req_ver or entry.get("latest")
-    bundle_info = entry.get("versions", {}).get(version)
-    if not bundle_info:
-        print(f"[setup] version info missing for {args.runner}:{version}", file=sys.stderr)
-        return 3
-    bundle_path = Path(bundle_info.get("path"))
+
+    bundle_path = _bundle_path_for(registry_root, req_name, req_ver)
     if not bundle_path.exists():
         print(f"[setup] bundle missing: {bundle_path}", file=sys.stderr)
+        print(f"[setup] build it with: omni build {registry_root / req_name.replace('omnilaunch/','')}")
         return 4
 
     # Extract to read runner.yaml and modal_app.py
@@ -430,24 +444,14 @@ def cmd_doctor(_args: argparse.Namespace) -> int:
 
 
 def cmd_list(_args: argparse.Namespace) -> int:
-    """List all runners (built and unbuilt) from the registry."""
+    """List all runners (built and unbuilt) from the registry.
+
+    Built status is computed from local bundle files, not index.json.
+    """
     registry_root = Path(__file__).parent.parent / "registry"
-    index_path = registry_root / "index.json"
-    
-    # Load built runners from index
-    built_runners = {}
-    if index_path.exists():
-        try:
-            index = json.loads(index_path.read_text(encoding="utf-8"))
-            for runner in index.get("runners", []):
-                name = runner.get("name", "")
-                if name:
-                    built_runners[name] = runner
-        except Exception as e:
-            print(f"[list] Warning: Could not read index: {e}", file=sys.stderr)
-    
+
     # Discover all source runners from registry/*/runner.yaml
-    all_runners = {}
+    all_runners: dict[str, dict] = {}
     for item in registry_root.iterdir():
         if item.is_dir() and item.name not in ("omnilaunch", ".git", "__pycache__"):
             runner_yaml = item / "runner.yaml"
@@ -455,80 +459,75 @@ def cmd_list(_args: argparse.Namespace) -> int:
                 try:
                     name, version = _read_name_version(item)
                     if name and name != "unknown":
+                        bundle_path = _bundle_path_for(registry_root, name, version)
                         all_runners[name] = {
                             "source_path": item,
                             "name": name,
                             "version": version,
-                            "built": name in built_runners,
-                            "built_info": built_runners.get(name)
+                            "bundle_path": bundle_path,
+                            "built": bundle_path.exists(),
                         }
                 except Exception:
                     pass
-    
+
     if not all_runners:
         print("[list] No runners found in registry/")
         return 0
-    
+
     print(f"Available Runners ({len(all_runners)}):\n")
-    
+
     # Sort by name
     sorted_runners = sorted(all_runners.values(), key=lambda r: r["name"])
-    
+
     for runner in sorted_runners:
         name = runner["name"]
         source_path = runner["source_path"]
+        version = runner["version"]
+        bundle_path = runner["bundle_path"]
         is_built = runner["built"]
-        
+
         # Status indicator
         status_icon = "[✓]" if is_built else "[ ]"
-        
+
         print(f"  {status_icon} {name}")
-        
+
+        # Show version info
+        print(f"      Version: {version}")
+
+        # Read entrypoint info from source runner.yaml
+        try:
+            import yaml
+            meta = yaml.safe_load((source_path / "runner.yaml").read_text())
+            entrypoints = meta.get("entrypoints", {})
+            entrypoint_strs = []
+            for ep_name, ep_config in entrypoints.items():
+                if isinstance(ep_config, dict):
+                    gpu = ep_config.get("gpu")
+                    gpu_str = gpu if gpu else "CPU"
+                    entrypoint_strs.append(f"{ep_name} ({gpu_str})")
+                else:
+                    entrypoint_strs.append(ep_name)
+            if entrypoint_strs:
+                print(f"      Entrypoints: {', '.join(entrypoint_strs)}")
+        except Exception:
+            pass
+
         if is_built:
-            # Show built runner info
-            built_info = runner["built_info"]
-            latest = built_info.get("latest", "N/A")
-            versions = built_info.get("versions", {})
-            version_list = sorted(versions.keys()) if versions else []
-            
-            print(f"      Latest: {latest}")
-            if len(version_list) > 1:
-                print(f"      Versions: {', '.join(version_list)}")
-            
-            # Read entrypoint info from source runner.yaml
-            try:
-                import yaml
-                runner_yaml = source_path / "runner.yaml"
-                if runner_yaml.exists():
-                    meta = yaml.safe_load(runner_yaml.read_text())
-                    entrypoints = meta.get("entrypoints", {})
-                    entrypoint_strs = []
-                    for ep_name, ep_config in entrypoints.items():
-                        if isinstance(ep_config, dict):
-                            gpu = ep_config.get("gpu")
-                            gpu_str = gpu if gpu else "CPU"
-                            entrypoint_strs.append(f"{ep_name} ({gpu_str})")
-                        else:
-                            entrypoint_strs.append(ep_name)
-                    if entrypoint_strs:
-                        print(f"      Entrypoints: {', '.join(entrypoint_strs)}")
-            except Exception:
-                pass
+            print(f"      Bundle: {bundle_path}")
         else:
-            # Show unbuilt runner info
             print(f"      Status: Not built yet")
             print(f"      Build: omni build {source_path}")
-        
+
         print()
-    
+
     # Summary
     built_count = sum(1 for r in sorted_runners if r["built"])
     unbuilt_count = len(sorted_runners) - built_count
-    
+
     if unbuilt_count > 0:
         print(f"Built: {built_count}, Not built: {unbuilt_count}")
         print(f"\nTip: Run 'omni build <path>' to build unbuilt runners")
-    
+
     return 0
 
 
