@@ -1,23 +1,28 @@
 # Omnilaunch
 
-> **The execution layer for reproducible AI**  
-> Run any model, anywhere, reproducibly — training, inference, fine-tuning, benchmarking.
+> **AI workflows that just work.**  
+> Run, train, benchmark, and reproduce *any* AI workflow on GPUs — cleanly, consistently, and reproducibly.
 
-In short, reproducible AI workflows. Or said another, more salesy way: Docker for AI workflows. The workflow could simply be "run this open source AI model", "train that open source AI model", "benchmark this AI model with that benchmark dataset", or all of the above in one. We accomplish this by using Modal + HuggingFace, and a simple cli contract: `omni run <runner> <params>`.
+Omnilaunch is a **Python CLI** for building, deploying, and running GPU-powered AI workflows on [Modal](https://modal.com).
+It wraps the Modal API and CLI with a clean, consistent layer that standardizes how AI experiments, model training runs, and benchmarks are executed.
 
----
+At its core, Omnilaunch turns complex infrastructure into a simple pattern:
 
-## 🎯 The Vision
+```bash
+omni build  → package a runner (creates versioned tarball + hash)
+omni setup  → deploy to Modal and perform setup tasks (build image, download weights, run checks)
+omni run    → execute an entrypoint on Modal (train, infer, benchmark, etc.)
+```
 
-Run any model, anywhere, reproducibly. One CLI (`omni run <runner> <entrypoint>`) for training, inference, fine-tuning, and benchmarking.
-
-**Omnilaunch standardizes AI execution** — built on Modal + Hugging Face for transparent, reproducible, cost-effective model workflows. No more broken Colabs, missing dependencies, or incompatible environments.
+Everything runs **on Modal** (where GPUs live), but can be **triggered from anywhere** using the CLI.
+The goal is simple: **no broken Colabs, no dependency hell, no "it worked on my machine" excuses — just reproducible AI workflows that work.**
 
 ---
 
 ## ⚡ Quick Start
 
-Follow the [Modal account setup](./docs/MODAL_SETUP.md) guide first, then you can run this quickstart. Modal account setup will literally take you less than 2 minutes. You don't even need to enter your credit card if you don't want to! But I would recommend it to unlock the free $30/mo of free usage (they're basically *paying* you to use their platform!).
+Follow the [Modal account setup](./docs/MODAL_SETUP.md) guide first, then run this quickstart.
+Setup takes ~2 minutes, no credit card required (Modal includes $30/mo of free GPU time).
 
 ```bash
 # 0. Setup
@@ -55,10 +60,51 @@ omni run omnilaunch/sdxl:0.1.0 infer \
 
 ---
 
+## 🧩 What Omnilaunch Does
+
+Omnilaunch provides a lightweight, opinionated framework for defining **reproducible AI workflows** — from quick tests to full-scale training pipelines.
+
+You can:
+
+* 🧠 **Prototype fast:** Run a single model or test a new LoRA without environment setup.
+* ⚙️ **Reproduce experiments:** Capture exact code, weights, and dependencies for reliable reruns.
+* 🧪 **Benchmark at scale:** Standardize evaluation across many models or tasks.
+* 🎓 **Teach or share workflows:** Package multi-stage examples (e.g., pretrain → RL → alignment → chat) as reusable runners.
+* 🚀 **Reproduce production-scale jobs:** Launch the same training workflows used in papers or production systems — deterministically.
+
+It's flexible enough for small experiments and powerful enough to re-run large-scale jobs.
+
+---
+
+## 🧠 Why It Exists
+
+Running open-source AI models today often means juggling fragile Colab notebooks, expensive hosted endpoints, or custom scripts that drift over time.
+Omnilaunch fixes that by providing a **repeatable, transparent, versioned** way to build and execute GPU workloads.
+
+* **Deterministic builds:** Modal images are immutable once built.
+* **Versioned workflows:** Every runner build gets a unique hash and tarball.
+* **No boilerplate:** Define a `modal_app.py` and a config — Omnilaunch handles the rest.
+* **It just works:** If your workflow runs locally with Python, it'll run the same way in Modal — reproducibly.
+
+---
+
+## 👥 Who Is This For
+
+| Persona                   | Use Case                                   | Example                                                                         |
+| ------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------- |
+| **Builders & OSS devs**   | Quickly test new models or adapters        | Spin up 5 text-to-image models and compare prompts and outputs.                             |
+| **Researchers**           | Package and reproduce experiments          | Bundle a paper's training pipeline as a reproducible runner.                    |
+| **Educators**             | Teach AI workflows step-by-step            | Define entrypoints for pretrain → RL → alignment → test.                        |
+| **Students & learners**   | Run heavy workflows without setup          | Use Modal GPUs for small experiments safely and reproducibly.                   |
+| **Automation / AI tools** | Generate or extend workflows automatically | AI writes new runners using the standard pattern, usually correct on first try. |
+| **Teams & startups**      | Ensure consistency in internal workflows   | Every run has a version, hash, and reproducible setup.                          |
+
+---
+
 ## 💡 Why Modal?
 
 **Transparent & Predictable:**
-- Per-second GPU billing (not per-step like Fal/Fireworks)
+- Per-second GPU billing (not per-step like Fireworks.ai and other similar platforms)
 - [Pick your GPU](https://modal.com/pricing) (A10G, H100, etc.) — no black-box allocation
 - Modal shows exact execution time and cost
 
@@ -68,7 +114,7 @@ omni run omnilaunch/sdxl:0.1.0 infer \
 - Persistent volumes for model caching (no re-downloads)
 
 **Reliable:**
-- Competitors (Fal, Fireworks) have frequent compatibility issues
+- Other platforms have frequent compatibility issues or cryptic errors and failures
 - Modal's abstraction is minimal — closer to "your code on a GPU"
 - Clear error messages, real logs (not cryptic failures)
 
@@ -76,25 +122,6 @@ omni run omnilaunch/sdxl:0.1.0 infer \
 - Modal provides credit grants for [academics](https://modal.com/academics) and [startups](https://modal.com/startups)
 - If you have committed spend with AWS, Azure, GCP, or OCI, you will soon be able to use that commit on Modal
 - Get free credits ($30/mo of free credits on the Free plan, $100/mo of free credits on the $250/mo plan) to put towards your compute
-
----
-
-## 📊 Omnilaunch vs Alternatives
-
-- [Replicate](https://replicate.com) - conveniently hosts models for you; no-code UI + API; finding models to fine-tune is not intuitive or clear, and you pay per generation for inference and per-step for fine-tuning. You basically pay extra for convenience. Fine-tuning is also designed for small datasets and very limited. 
-- [Fal](https://fal.ai) - same benefits and drawbacks as Replicate; although I find it more intuitive to find which models can be fine-tuned.
-- [Fireworks](https://fireworks.ai) - mixed pricing; some setups/models are per-token, some require you to pay for GPU-time. They require a minimum of 5 minutes of GPU time once spun up, meaning you're wasting money unless you have a high-traffic app where this makes sense. Training is done-for-you, but blackbox; they charge per-step, and you can end up with cryptic errors and failures.
-- [Lambda AI](https://lambda.ai) - no option to spin up a VM/container/instance detached from a GPU, so you pay for every second your instance is running, even when idle and not using the GPU. Persistent storage is not always guaranteed; most of the time what you're doing is ephemeral.
-- [Notebooks](https://colab.research.google.com/) - these are great and widely used; they solve reproducibility. But seem like a pain to get setup, there are lots of new platforms that have their own "Notebooks" (Modal has this now too), and from what I've heard many people use this to get free GPU/TPU time. But it sounds like in many cases, you can be left waiting for a LONG time to secure free GPU/TPU compute. And it just requires more setup and maintenance.
-- Local - building and running locally is a minefield of dependency issues, wide variance of consumer hardware, and operating systems + versions. What works on one person's machine is not likely to work on another's. You also usually need to run quantized, watered-down versions of models. It's "free", but you pay with your time and sanity.
-
-With Omnilaunch, you get the convenience of Replicate and Fal, and infinite training customization (as much as the desired model supports). Thoug for one-off inference, you likely get better pricing from platforms like Replicate or Fal. But this will improve over time.
-
-Compared to Fireworks AI, you'll have full insight into training runs via logs, and the same convenience they provide of ~basically "done-for-you" training. Except you don't overpay by paying per step, you pay for GPU time, which in my experience is usually much cheaper - even without lots of special optimizations.
-
-Compared to Lambda, with Omnilauch you get the ease of running stuff as if you're just writing Python on a Linux instance with an attached GPU, but you only pay per second of GPU time. AND you get persistent storage. You get none of these with Lambda, and in my experience, they don't have the same volume of available GPUs are Modal does; I often had to wait for the desired GPU to become available again.
-
-Compared to Notebooks-like tools and products, this is highly reproducible. You essentially get "free" compute through Modal's pricing plans: for the Free plan, you get $30/mo of free compute, and for their $250/mo plan you get $100/mo of free compute. AND you can pick which GPUs you use!
 
 ---
 
@@ -238,38 +265,46 @@ omni list
 
 ---
 
-## 🏗️ How It Works
+## ⚙️ How It Works
 
-### **What's a Runner?**
+Each workflow is packaged as a **runner** — a directory with Python code and metadata describing how to execute a particular AI process.
 
-A **runner** is a self-contained, reproducible package for model execution. Think of it as a specialized container that knows how to run a specific model or workflow.
+### Runner Structure
+
+```bash
+omnilaunch/registry/sdxl/
+├── modal_app.py       # Defines modal.Functions and entrypoints (train, infer, benchmark, etc.)
+├── runner.yaml        # Metadata: name, version, GPU per entrypoint
+├── schema/
+│   ├── infer.json     # JSON schema for inference params
+│   └── dataset.json   # JSON schema for training data
+├── tests/smoke.py     # Basic smoke tests
+└── README.md          # Workflow card with usage examples
+```
+
+Each runner can contain *any code* that can be written in Python and benefits from execution on a GPU. Common use cases:
+
+* Model training (LLM, diffusion, RLHF, etc.)
+* LoRA or fine-tuning workflows
+* Evaluation and benchmarking scripts
+* Multi-phase experiments or educational demos
 
 **Runners can represent:**
 - Official model deployments (e.g., Stability AI's SDXL)
 - Optimized inference stacks (e.g., vLLM for LLMs, optimized diffusion pipelines)
 - SaaS-ready backends (e.g., PhotoAI-style personalized image generation)
-- Benchmarking setups (e.g., `omnilaunch/gpt-oss-20b-bench` with supported benchmarks as entrypoints)
+- Benchmarking setups (e.g., `omnilaunch/gpt-oss-20b` with `benchmark_tinymmlu` entrypoint)
 - Educational tools (e.g., compare pre-alignment vs post-alignment LLM checkpoints)
 
-**Everything is just:** `omni run <runner> <entrypoint>`
+### CLI Flow
 
-```
-omnilaunch/registry/sdxl/
-├── runner.yaml         # Metadata: name, version, GPU per entrypoint
-├── modal_app.py        # Modal app with functions (setup, infer, train_*)
-├── schema/
-│   ├── infer.json      # JSON schema for inference params
-│   └── dataset.json    # JSON schema for training data
-└── tests/smoke.py      # Basic smoke tests
-```
+| Command      | What it does                                                                                                             |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| `omni build` | Packages a runner directory into a versioned tarball and computes a hash. May later support signing for provenance.      |
+| `omni setup` | Deploys the Modal app (builds Docker image, downloads weights, verifies environment). One-time setup per runner version. |
+| `omni run`   | Invokes an entrypoint (train, infer, benchmark, etc.) on Modal's GPUs. Supports parameters and output saving.            |
 
-**Key features:**
-- **Versioned** — `omnilaunch/sdxl:0.1.0`, `omnilaunch/sdxl:0.2.0`
-- **Bundled** — Packaged as `.tar.gz` with manifest and schemas
-- **Signed** *(coming)* — Cryptographically verified with Sigstore/GPG
-- **Backend-agnostic** *(future)* — Modal first, then AWS/RunPod/local via IaC tools
-
-### **Entrypoints**
+### Entrypoints
 
 Each runner defines standardized entrypoints. CPU and GPU resources are specified per-entrypoint:
 
@@ -291,25 +326,41 @@ entrypoints:
     schema: schema/train_lora.json
 ```
 
-**CPU inference** provides "Ollama for servers" — cheap, reproducible inference for smaller models or batch jobs.
+**Everything is just:** `omni run <runner> <entrypoint>`
 
-### **Reproducibility**
+### Reproducibility
 
-Every run produces a signed manifest *(coming soon)*:
+Every runner build creates:
+- **Versioned tarball** — `runner.tar.gz` with all code and configs
+- **Manifest hash** — Unique identifier for the exact runner version
+- **Pinned dependencies** — Immutable Modal images with locked package versions
 
-```json
-{
-  "runner": "omnilaunch/sdxl:0.1.0",
-  "entrypoint": "infer",
-  "dataset": "hf:user/data@a7cd4f",
-  "params_hash": "f26b4...",
-  "image_hash": "sha256:c7b2a...",
-  "backend": "modal",
-  "gpu": "A10G",
-  "signatures": ["cosign:6f3e..."],
-  "metrics": {"steps": 25, "guidance": 7.5}
-}
-```
+Coming soon:
+- **Signed manifests** — Cryptographically verified with Sigstore/GPG
+- **Run provenance** — Full audit trail from data → model → results
+
+**Key features:**
+- **Versioned** — `omnilaunch/sdxl:0.1.0`, `omnilaunch/sdxl:0.2.0`
+- **Bundled** — Packaged as `.tar.gz` with manifest and schemas
+- **Signed** *(coming)* — Cryptographically verified with Sigstore/GPG
+- **Backend-agnostic** *(future)* — Modal first, then AWS/RunPod/local via IaC tools
+
+---
+
+## 🚧 Current Limitations
+
+* 🧩 Runs **only on Modal** for now (multi-backend support is possible with IaC tooling).
+* 🌐 No web UI yet (planned registry + metrics portal, like Docker Hub for AI workflows).
+
+---
+
+## 🔮 Future Vision
+
+* **Public registry of verified runners:** Browse, version, and reproduce any workflow.
+* **Provenance tracking & signing:** Each runner hash verifiable via Sigstore or similar.
+* **Community templates:** Easy scaffolds for HF, PyTorch, or custom training setups.
+* **Web interface:** Launch workflows, view logs, track metrics, and share results.
+* **Automated runner generation:** LLMs that extend the registry automatically.
 
 ---
 
@@ -325,23 +376,15 @@ Every run produces a signed manifest *(coming soon)*:
 - Reproducible manifests with pinned dependencies
 - WandB integration for training metrics
 
-**🔄 In Progress (v0.2):**
-- Audio generation (TTS, music)
-- 3D generation (text/image to mesh)
-- More fine-tuning runners (SDXL LoRA, LLM LoRA)
-- More benchmarking datasets (full MMLU, GSM8K, HumanEval)
-- Production serving (`omni serve` with vLLM)
-
-**📋 Planned (v0.3+):**
-- More models (Llama, Mistral, Flux, etc.)
-- Registry with signing (Sigstore/GPG)
-- Benchmark leaderboards (reproducible, verifiable)
-- Educational runners (checkpoint comparison)
+**📋 Planned (v0.2+):**
+- Gabe will add several more runners for model training/fine tuning and sampling
 
 **🌍 Future (community-driven):**
 - Multi-backend support (AWS, RunPod, local via IaC)
 - Playground UI (open-source, connects to your Modal)
 - SaaS starter templates
+- Production-grade inference
+- Whatever the community needs and is willing to contribute!
 
 ---
 
@@ -508,6 +551,21 @@ Built on **Modal + Hugging Face** for open, reproducible infrastructure.
 
 ---
 
+## 🤝 Contributing
+
+Contributions are welcome!
+If you'd like to add a new runner, check the `/registry` directory and open a PR.
+Runners follow a consistent structure — `build → setup → run` — making it easy for both humans and AI to add new workflows.
+
+---
+
+## 💬 Feedback
+
+Open an issue or tag [@gabebusto](https://x.com/gabebusto) on X for feedback, ideas, or collaboration.
+If you're at Modal, Hugging Face, Replicate, Fal, or any infra team building for reproducible AI — I'd love to chat!
+
+---
+
 ## 🙏 Credits
 
 Built on:
@@ -517,4 +575,4 @@ Built on:
 
 ---
 
-**This is early-stage. Feedback welcome.** 🚀
+**Omnilaunch — AI workflows that just work.**
