@@ -248,7 +248,164 @@ def cmd_setup(args: argparse.Namespace) -> int:
         return 5
 
 
+def _resolve_runner_version_from_source(registry_root: Path, req_name: str) -> str | None:
+    """Read version from source runner.yaml for a given runner name.
+
+    Expects source layout: registry/<slug>/runner.yaml
+    """
+    runner_dir = registry_root / req_name.replace("omnilaunch/", "")
+    try:
+        _, ver = _read_name_version(runner_dir)
+        return ver
+    except Exception:
+        return None
+
+
+def _load_runner_yaml(registry_root: Path, req_name: str, req_ver: str | None) -> tuple[dict, Path | None]:
+    """Load runner.yaml for a runner, preferring built bundle, falling back to source.
+
+    Returns (yaml_dict, extracted_dir_or_source_dir) where the second element points
+    to a directory containing 'schema/' for resolving entrypoint schemas.
+    """
+    import yaml
+
+    # Determine version if not provided
+    version = req_ver or _resolve_runner_version_from_source(registry_root, req_name)
+
+    # Try built bundle first
+    if version:
+        bundle_path = _bundle_path_for(registry_root, req_name, version)
+        if bundle_path.exists():
+            tmpdir = Path(tempfile.mkdtemp())
+            with tarfile.open(bundle_path, mode="r:gz") as tf:
+                tf.extractall(tmpdir)
+            ry_path = tmpdir / "runner.yaml"
+            try:
+                data = yaml.safe_load(ry_path.read_text(encoding="utf-8")) or {}
+                return data, tmpdir
+            except Exception:
+                shutil.rmtree(tmpdir, ignore_errors=True)
+
+    # Fallback to source runner
+    source_dir = registry_root / req_name.replace("omnilaunch/", "")
+    ry_path = source_dir / "runner.yaml"
+    data = yaml.safe_load(ry_path.read_text(encoding="utf-8")) if ry_path.exists() else {}
+    return data, source_dir if source_dir.exists() else None
+
+
+def _print_runner_help(registry_root: Path, req_name: str, req_ver: str | None) -> int:
+    """Print available entrypoints and usage for a runner."""
+    meta, base_dir = _load_runner_yaml(registry_root, req_name, req_ver)
+    if not meta:
+        print(f"[help] runner not found or invalid: {req_name}", file=sys.stderr)
+        return 2
+    print(f"Runner: {meta.get('name') or req_name}")
+    if meta.get("version"):
+        print(f"Version: {meta['version']}")
+    eps = meta.get("entrypoints", {}) or {}
+    if not eps:
+        print("No entrypoints defined.")
+        return 0
+    print("\nEntrypoints:")
+    for ep_name, ep_cfg in eps.items():
+        if isinstance(ep_cfg, dict):
+            fn = ep_cfg.get("function", "")
+            gpu = ep_cfg.get("gpu") or "CPU"
+            schema = ep_cfg.get("schema") or f"schema/{ep_name}.json"
+            print(f"  - {ep_name}  (GPU: {gpu})  → {fn}")
+            # Indicate if schema is present
+            if base_dir is not None:
+                sp = (Path(base_dir) / ("schema/" + schema.split("/")[-1])) if "/" in schema else (Path(base_dir) / schema)
+                exists = sp.exists()
+                print(f"      Params schema: {'present' if exists else 'missing'} ({schema})")
+        else:
+            print(f"  - {ep_name}")
+    print("\nUsage:")
+    print(f"  omni run {meta.get('name') or req_name}:<version> <entrypoint> [--params FILE|JSON] [-p k=v] [--save]")
+    print(f"  omni run {meta.get('name') or req_name}:<version> --help  # show this message")
+    print(f"  omni run {meta.get('name') or req_name}:<version> <entrypoint> --help  # show params for entrypoint")
+    return 0
+
+
+def _print_entrypoint_help(registry_root: Path, req_name: str, req_ver: str | None, entrypoint: str) -> int:
+    """Print parameter help for a specific entrypoint using its JSON schema if available."""
+    try:
+        import jsonschema  # noqa: F401  # Ensure available for consistency
+    except Exception:
+        pass
+
+    meta, base_dir = _load_runner_yaml(registry_root, req_name, req_ver)
+    if not meta:
+        print(f"[help] runner not found or invalid: {req_name}", file=sys.stderr)
+        return 2
+    ep_cfg = meta.get("entrypoints", {}).get(entrypoint)
+    if not ep_cfg:
+        print(f"[help] entrypoint not found: {entrypoint}", file=sys.stderr)
+        return 2
+
+    print(f"Runner: {meta.get('name') or req_name}")
+    print(f"Entrypoint: {entrypoint}")
+    if isinstance(ep_cfg, dict):
+        print(f"Function: {ep_cfg.get('function', '')}")
+        print(f"GPU: {ep_cfg.get('gpu') or 'CPU'}")
+    schema_file = None
+    if isinstance(ep_cfg, dict) and ep_cfg.get("schema"):
+        schema_file = ep_cfg["schema"]
+    else:
+        schema_file = f"schema/{entrypoint}.json"
+
+    schema_path = None
+    if base_dir is not None:
+        sp = (Path(base_dir) / schema_file) if "/" in schema_file else (Path(base_dir) / "schema" / Path(schema_file).name)
+        schema_path = sp if sp.exists() else None
+
+    if not schema_path:
+        print("\nNo parameter schema found. This entrypoint may not require params.")
+        print("Usage:")
+        print(f"  omni run {meta.get('name') or req_name}:{meta.get('version') or '<version>'} {entrypoint} --params params.json")
+        return 0
+
+    try:
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    except Exception as e:
+        print(f"[help] failed to read schema: {e}", file=sys.stderr)
+        return 3
+
+    print("\nParameters (from JSON schema):")
+    required = set(schema.get("required", []) or [])
+    props = schema.get("properties", {}) or {}
+    if not props:
+        print("  (none)")
+    else:
+        for key, spec in props.items():
+            typ = spec.get("type", "any")
+            default = spec.get("default")
+            desc = spec.get("description") or ""
+            req = " (required)" if key in required else ""
+            default_str = f" [default: {default}]" if default is not None else ""
+            print(f"  - {key}: {typ}{req}{default_str}")
+            if desc:
+                print(f"      {desc}")
+
+    print("\nUsage:")
+    print(f"  omni run {meta.get('name') or req_name}:{meta.get('version') or '<version>'} {entrypoint} -p key=value ...")
+    print(f"  omni run {meta.get('name') or req_name}:{meta.get('version') or '<version>'} {entrypoint} --params params.json")
+    return 0
+
+
 def cmd_run(args: argparse.Namespace) -> int:
+    # Dynamic help for runners and entrypoints
+    if getattr(args, "help_flag", False):
+        # If no runner provided, show static usage for run
+        if not getattr(args, "runner", None):
+            print("Usage:\n  omni run <runner[:version]> [<entrypoint>] [--params FILE|JSON] [-p k=v] [--save]\n  omni run <runner[:version]> --help\n  omni run <runner[:version]> <entrypoint> --help")
+            return 0
+        registry_root = Path(__file__).resolve().parents[1] / "registry"
+        req_name, req_ver = _parse_runner_ref(args.runner)
+        if not args.entrypoint:
+            return _print_runner_help(registry_root, req_name, req_ver)
+        return _print_entrypoint_help(registry_root, req_name, req_ver, args.entrypoint)
+
     print(f"[omni run] runner={args.runner} entrypoint={args.entrypoint} dataset={args.dataset} params={args.params}")
     # Resolve bundle & read runner.yaml
     index_path = Path(__file__).resolve().parents[1] / "registry" / "index.json"
@@ -549,9 +706,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_setup.add_argument("runner", help="Runner ref (name:version or path)")
     p_setup.set_defaults(func=cmd_setup)
 
-    p_run = sub.add_parser("run", help="Run a runner entrypoint")
-    p_run.add_argument("runner", help="Runner ref (name:version or path)")
-    p_run.add_argument("entrypoint", help="Entrypoint name (train_full/train_lora/infer)")
+    p_run = sub.add_parser("run", help="Run a runner entrypoint", add_help=False)
+    p_run.add_argument("runner", nargs="?", help="Runner ref (name:version or path)")
+    p_run.add_argument("entrypoint", nargs="?", help="Entrypoint name (train_full/train_lora/infer)")
     # Dataset required only for training entrypoints; optional for infer
     p_run.add_argument("--dataset", help="Dataset URI (hf:.. or vol:..)")
     p_run.add_argument("--params", help="Params file path OR inline JSON/YAML string")
@@ -559,6 +716,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_run.add_argument("--save", action="store_true", help="Save outputs to disk when content_type is present")
     p_run.add_argument("--outdir", help="Directory for saved outputs (default: ./omni_out)")
     p_run.add_argument("--outfile", help="Explicit output filename (e.g., result.png)")
+    # Dynamic help flag: prints entrypoints or parameter schema help for the given runner/entrypoint
+    p_run.add_argument("-h", "--help", dest="help_flag", action="store_true", help="Show entrypoints for runner or params for entrypoint")
     p_run.set_defaults(func=cmd_run)
 
     return p

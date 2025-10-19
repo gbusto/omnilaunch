@@ -58,6 +58,12 @@ omni run omnilaunch/sdxl:0.1.0 infer \
 
 **That's it.** It just works — reproducibly, every time.
 
+**Tip:** Use `--help` to explore any runner:
+```bash
+omni run omnilaunch/sdxl:0.1.0 --help       # List all entrypoints
+omni run omnilaunch/sdxl:0.1.0 infer --help # Show parameters for infer
+```
+
 ---
 
 ## 🧩 What Omnilaunch Does
@@ -534,12 +540,28 @@ These principles ensure stability, transparency, and long-term ecosystem health.
 
 ### Flags for `omni run`
 
+- `-h, --help` - Show entrypoints for a runner or parameters for a specific entrypoint
 - `--params <file or JSON>` - Parameters as YAML/JSON file or inline string
 - `-p, --param key=value` - Individual param overrides (repeatable)
 - `--save` - Auto-save outputs to disk
 - `--outdir <path>` - Directory for saved outputs (default: `./omni_out`)
 - `--outfile <name>` - Explicit output filename
 - `--dataset <uri>` - Dataset URI for training (e.g., `hf:org/dataset` or `vol:/path`)
+
+### Getting Help
+
+```bash
+# List all entrypoints for a runner
+omni run omnilaunch/sdxl:0.1.0 --help
+
+# Show parameters for a specific entrypoint
+omni run omnilaunch/sdxl:0.1.0 infer --help
+
+# Output shows:
+# - Entrypoint function and GPU requirement
+# - All parameters with types, defaults, and descriptions (from JSON schema)
+# - Usage examples
+```
 
 ---
 
