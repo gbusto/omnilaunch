@@ -217,14 +217,23 @@ Results include overall accuracy, per-subject breakdown, sample predictions, and
 ```bash
 omni list
 
-# Output:
-#   omnilaunch/gpt-oss-20b
-#     Entrypoints: download_files (CPU), setup (CPU), infer (A10G)
-#   omnilaunch/gpt-oss-120b
-#     Entrypoints: download_files (CPU), setup (CPU), infer (H100)
-#   omnilaunch/sdxl
-#     Entrypoints: download_files (CPU), setup (CPU), infer (A10G)
-#   ...
+# Shows all runners (built and unbuilt) with status indicators:
+#
+# Available Runners (5):
+#
+#   [✓] omnilaunch/gpt-oss-20b
+#       Latest: 0.1.0
+#       Entrypoints: download_files (CPU), setup (CPU), infer (A10G), benchmark_tinymmlu (A10G)
+#
+#   [ ] omnilaunch/qwen3-vl
+#       Status: Not built yet
+#       Build: omni build omnilaunch/registry/qwen3-vl
+#
+#   [✓] omnilaunch/sdxl
+#       Latest: 0.1.0
+#       Entrypoints: download_files (CPU), setup (CPU), infer (A10G)
+#
+# Built: 2, Not built: 3
 ```
 
 ---

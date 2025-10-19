@@ -430,65 +430,106 @@ def cmd_doctor(_args: argparse.Namespace) -> int:
 
 
 def cmd_list(_args: argparse.Namespace) -> int:
-    """List available runners from the registry."""
+    """List all runners (built and unbuilt) from the registry."""
     registry_root = Path(__file__).parent.parent / "registry"
     index_path = registry_root / "index.json"
     
-    if not index_path.exists():
-        print("[list] No registry index found. Run 'omni build' to register runners.", file=sys.stderr)
-        return 1
+    # Load built runners from index
+    built_runners = {}
+    if index_path.exists():
+        try:
+            index = json.loads(index_path.read_text(encoding="utf-8"))
+            for runner in index.get("runners", []):
+                name = runner.get("name", "")
+                if name:
+                    built_runners[name] = runner
+        except Exception as e:
+            print(f"[list] Warning: Could not read index: {e}", file=sys.stderr)
     
-    try:
-        index = json.loads(index_path.read_text(encoding="utf-8"))
-        runners = index.get("runners", [])
+    # Discover all source runners from registry/*/runner.yaml
+    all_runners = {}
+    for item in registry_root.iterdir():
+        if item.is_dir() and item.name not in ("omnilaunch", ".git", "__pycache__"):
+            runner_yaml = item / "runner.yaml"
+            if runner_yaml.exists():
+                try:
+                    name, version = _read_name_version(item)
+                    if name and name != "unknown":
+                        all_runners[name] = {
+                            "source_path": item,
+                            "name": name,
+                            "version": version,
+                            "built": name in built_runners,
+                            "built_info": built_runners.get(name)
+                        }
+                except Exception:
+                    pass
+    
+    if not all_runners:
+        print("[list] No runners found in registry/")
+        return 0
+    
+    print(f"Available Runners ({len(all_runners)}):\n")
+    
+    # Sort by name
+    sorted_runners = sorted(all_runners.values(), key=lambda r: r["name"])
+    
+    for runner in sorted_runners:
+        name = runner["name"]
+        source_path = runner["source_path"]
+        is_built = runner["built"]
         
-        if not runners:
-            print("[list] No runners registered yet. Run 'omni build <path>' to add one.")
-            return 0
+        # Status indicator
+        status_icon = "[✓]" if is_built else "[ ]"
         
-        print(f"[list] Available runners ({len(runners)}):\n")
+        print(f"  {status_icon} {name}")
         
-        # Sort by name for consistent output
-        runners_sorted = sorted(runners, key=lambda r: r.get("name", ""))
-        
-        for runner in runners_sorted:
-            name = runner.get("name", "unknown")
-            latest = runner.get("latest", "N/A")
-            versions = runner.get("versions", {})
+        if is_built:
+            # Show built runner info
+            built_info = runner["built_info"]
+            latest = built_info.get("latest", "N/A")
+            versions = built_info.get("versions", {})
+            version_list = sorted(versions.keys()) if versions else []
             
-            # Read entrypoint GPU info from runner.yaml
-            entrypoints_info = []
+            print(f"      Latest: {latest}")
+            if len(version_list) > 1:
+                print(f"      Versions: {', '.join(version_list)}")
+            
+            # Read entrypoint info from source runner.yaml
             try:
-                runner_dir = registry_root / name.replace("omnilaunch/", "")
-                runner_yaml = runner_dir / "runner.yaml"
+                import yaml
+                runner_yaml = source_path / "runner.yaml"
                 if runner_yaml.exists():
-                    import yaml
                     meta = yaml.safe_load(runner_yaml.read_text())
                     entrypoints = meta.get("entrypoints", {})
+                    entrypoint_strs = []
                     for ep_name, ep_config in entrypoints.items():
                         if isinstance(ep_config, dict):
                             gpu = ep_config.get("gpu")
                             gpu_str = gpu if gpu else "CPU"
-                            entrypoints_info.append(f"{ep_name} ({gpu_str})")
+                            entrypoint_strs.append(f"{ep_name} ({gpu_str})")
+                        else:
+                            entrypoint_strs.append(ep_name)
+                    if entrypoint_strs:
+                        print(f"      Entrypoints: {', '.join(entrypoint_strs)}")
             except Exception:
                 pass
-            
-            version_list = sorted(versions.keys()) if versions else []
-            
-            print(f"  {name}")
-            print(f"    Latest: {latest}")
-            print(f"    Versions: {', '.join(version_list)}")
-            if entrypoints_info:
-                print(f"    Entrypoints: {', '.join(entrypoints_info)}")
-            print()
+        else:
+            # Show unbuilt runner info
+            print(f"      Status: Not built yet")
+            print(f"      Build: omni build {source_path}")
         
-        return 0
-        
-    except Exception as e:
-        print(f"[list] Failed to read registry: {e}", file=sys.stderr)
-        import traceback
-        traceback.print_exc()
-        return 1
+        print()
+    
+    # Summary
+    built_count = sum(1 for r in sorted_runners if r["built"])
+    unbuilt_count = len(sorted_runners) - built_count
+    
+    if unbuilt_count > 0:
+        print(f"Built: {built_count}, Not built: {unbuilt_count}")
+        print(f"\nTip: Run 'omni build <path>' to build unbuilt runners")
+    
+    return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
