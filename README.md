@@ -15,24 +15,34 @@ Run any model, anywhere, reproducibly. One CLI (`omni run <runner> <entrypoint>`
 
 ---
 
-## ⚡ Quick Start (90 seconds)
+## ⚡ Quick Start
 
 Follow the [Modal account setup](./docs/MODAL_SETUP.md) guide first, then you can run this quickstart. Modal account setup will literally take you less than 2 minutes. You don't even need to enter your credit card if you don't want to! But I would recommend it to unlock the free $30/mo of free usage (they're basically *paying* you to use their platform!).
 
 ```bash
+# 0. Setup
+git clone https://github.com/gbusto/omnilaunch
+python3.12 -m venv .venv
+source .venv/bin/activate
+
 # 1. Install
 pip install -e omnilaunch/
 
-# 2. Check environment
+# 2. Setup modal and authenticate via command line (if not already done from the Modal account setup walkthrough linked above)
+modal setup
+
+# 3. Check environment
 omni doctor
 
-# 3. Build a runner
+# 4. Build a runner
 omni build omnilaunch/registry/sdxl/
 
-# 4. Setup (deploys app + downloads model)
+# 5. Setup; deploys app + builds image + downloads model
+#    This will take ~10 mins, so go grab some coffee ☕️
+#    No need to call `setup` again in the future; this is a one-time operation
 omni setup omnilaunch/sdxl:0.1.0
 
-# 5. Run inference
+# 6. Run inference
 omni run omnilaunch/sdxl:0.1.0 infer \
   -p prompt="astronaut riding a horse on mars" \
   -p steps=25 \
@@ -41,7 +51,7 @@ omni run omnilaunch/sdxl:0.1.0 infer \
 # ✨ Image saved to ./omni_out/astronaut.png
 ```
 
-**That's it.** No Docker, no CUDA setup, no dependency hell. It just works — reproducibly, every time.
+**That's it.** It just works — reproducibly, every time.
 
 ---
 
