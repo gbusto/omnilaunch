@@ -1,12 +1,11 @@
 # Omnilaunch
 
-> **AI workflows that just work.**  
+> **AI workflows that just work.**
 > Run, train, benchmark, and reproduce *any* AI workflow on GPUs — cleanly, consistently, and reproducibly.
 
-Omnilaunch is a **Python CLI** for building, deploying, and running GPU-powered AI workflows on [Modal](https://modal.com).
-It wraps the Modal API and CLI with a clean, consistent layer that standardizes how AI experiments, model training runs, and benchmarks are executed.
+Omnilaunch is a **Python CLI** for building, deploying, and running GPU-powered AI workflows on [Modal](https://modal.com). It wraps the Modal API and CLI with a lightweight layer that standardizes how AI experiments, training runs, and benchmarks are executed — no custom infra, no guesswork.
 
-At its core, Omnilaunch turns complex infrastructure into a simple pattern:
+At its core, Omnilaunch turns complex infrastructure into a simple, repeatable pattern:
 
 ```bash
 omni build  → package a runner (creates versioned tarball + hash)
@@ -14,15 +13,16 @@ omni setup  → deploy to Modal and perform setup tasks (build image, download w
 omni run    → execute an entrypoint on Modal (train, infer, benchmark, etc.)
 ```
 
-Everything runs **on Modal** (where GPUs live), but can be **triggered from anywhere** using the CLI.
-The goal is simple: **no broken Colabs, no dependency hell, no "it worked on my machine" excuses — just reproducible AI workflows that work.**
+Everything runs **on Modal** (where GPUs live) but can be **triggered from anywhere** using the CLI. And Hugging Face datasets, models, and libraries are a huge help in making it easy to build reliable, simple runners quickly.
+
+The goal: **no broken Colabs, no dependency hell, no “it worked on my machine” — just reproducible AI workflows that work.**
 
 ---
 
 ## ⚡ Quick Start
 
 Follow the [Modal account setup](./docs/MODAL_SETUP.md) guide first, then run this quickstart.
-Setup takes ~2 minutes, no credit card required (Modal includes $30/mo of free GPU time).
+Setup takes ~2 minutes — no credit card required (Modal gives you $30/mo of free GPU time).
 
 ```bash
 # 0. Setup
@@ -33,7 +33,7 @@ source .venv/bin/activate
 # 1. Install
 pip install -e omnilaunch/
 
-# 2. Setup modal and authenticate via command line (if not already done from the Modal account setup walkthrough linked above)
+# 2. Authenticate with Modal
 modal setup
 
 # 3. Check environment
@@ -42,9 +42,7 @@ omni doctor
 # 4. Build a runner
 omni build omnilaunch/registry/sdxl/
 
-# 5. Setup; deploys app + builds image + downloads model
-#    This will take ~10 mins, so go grab some coffee ☕️
-#    No need to call `setup` again in the future; this is a one-time operation
+# 5. Deploy and download model weights (first-time setup)
 omni setup omnilaunch/sdxl:0.1.0
 
 # 6. Run inference
@@ -56,13 +54,39 @@ omni run omnilaunch/sdxl:0.1.0 infer \
 # ✨ Image saved to ./omni_out/astronaut.png
 ```
 
-**That's it.** It just works — reproducibly, every time.
+**That’s it.** It just works — reproducibly, every time.
 
 **Tip:** Use `--help` to explore any runner:
+
 ```bash
 omni run omnilaunch/sdxl:0.1.0 --help       # List all entrypoints
 omni run omnilaunch/sdxl:0.1.0 infer --help # Show parameters for infer
 ```
+
+---
+
+## 🧠 What Problem It Solves
+
+Running open-source AI models today often means juggling fragile Colab notebooks, inconsistent repos, or expensive hosted endpoints.
+Each model introduces new dependencies, system conflicts, and setup drift — and reproducibility breaks down almost immediately.
+
+Omnilaunch fixes this by providing a **repeatable, transparent, versioned** way to build and execute GPU workloads.
+
+* **Deterministic builds:** Modal images are immutable once built.
+* **Versioned workflows:** Every runner build gets a unique hash and tarball.
+* **Zero boilerplate:** Define a single `modal_app.py` and config — Omnilaunch handles the rest.
+* **Portable results:** If it runs once, it’ll run again — reproducibly, anywhere Modal runs.
+
+---
+
+## 💡 Origin Story
+
+Omnilaunch was born out of frustration while building [Blocksmith AI](https://blocksmithai.com), where I tested and fine-tuned dozens of models (SDXL, SD3.5, Hunyuan3D, Qwen-Image-Edit, MV-Adapter, and more) across platforms like Modal, Replicate, Fal, and Fireworks.ai. Each platform had its quirks: cryptic errors, training limits, hidden costs, and none of them had "the whole package" that could do everything I wanted with pricing that made sense for me.
+
+At first, I relied on hosted platforms like Replicate, Fal, and Fireworks because they made model training and deployment look simple. But when I finally tried running everything myself on Modal, I realized it wasn’t hard at all! And it was faster, cheaper, and fully under my control.
+AI (Claude Opus 4) helped me write the first working Modal script for SDXL fine-tuning, and it worked almost immediately. That was the breakthrough: I didn’t need to rely on hosted services. I could build my own reproducible workflows (and learn)!
+
+So I turned that pattern of `build → setup → run` into a framework that made it easy for anyone to do the same. That became Omnilaunch: a tool for running any AI workflow (training, inference, benchmarking, or research replication) that just works.
 
 ---
 
@@ -72,25 +96,13 @@ Omnilaunch provides a lightweight, opinionated framework for defining **reproduc
 
 You can:
 
-* 🧠 **Prototype fast:** Run a single model or test a new LoRA without environment setup.
-* ⚙️ **Reproduce experiments:** Capture exact code, weights, and dependencies for reliable reruns.
+* 🧠 **Prototype fast:** Run a single model or test a new LoRA without setup headaches.
+* ⚙️ **Reproduce experiments:** Capture exact code, weights, and dependencies for consistent results.
 * 🧪 **Benchmark at scale:** Standardize evaluation across many models or tasks.
 * 🎓 **Teach or share workflows:** Package multi-stage examples (e.g., pretrain → RL → alignment → chat) as reusable runners.
-* 🚀 **Reproduce production-scale jobs:** Launch the same training workflows used in papers or production systems — deterministically.
+* 🚀 **Recreate production jobs:** Launch the same workflows used in papers or production systems — deterministically.
 
-It's flexible enough for small experiments and powerful enough to re-run large-scale jobs.
-
----
-
-## 🧠 Why It Exists
-
-Running open-source AI models today often means juggling fragile Colab notebooks, expensive hosted endpoints, or custom scripts that drift over time.
-Omnilaunch fixes that by providing a **repeatable, transparent, versioned** way to build and execute GPU workloads.
-
-* **Deterministic builds:** Modal images are immutable once built.
-* **Versioned workflows:** Every runner build gets a unique hash and tarball.
-* **No boilerplate:** Define a `modal_app.py` and a config — Omnilaunch handles the rest.
-* **It just works:** If your workflow runs locally with Python, it'll run the same way in Modal — reproducibly.
+It’s flexible enough for small experiments and robust enough for large-scale research reproduction.
 
 ---
 
