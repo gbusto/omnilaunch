@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "mesh_path": {
+      "type": "string",
+      "description": "Path to mesh file (GLB, OBJ, STL, etc.) - will be automatically converted to point cloud"
+    },
+    "npz_path": {
+      "type": "string",
+      "description": "Path to NPZ file containing 'points' and 'normals' arrays"
+    },
+    "points": {
+      "type": "array",
+      "description": "Point cloud coordinates as array of shape (N, 3)",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "minItems": 3,
+        "maxItems": 3
+      }
+    },
+    "normals": {
+      "type": "array",
+      "description": "Point cloud normals as array of shape (N, 3) - optional",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "minItems": 3,
+        "maxItems": 3
+      }
+    },
+    "num_points": {
+      "type": "integer",
+      "default": 16384,
+      "description": "Number of points to sample from mesh (only used with mesh_path)"
+    },
+    "max_new_tokens": {
+      "type": "integer",
+      "default": 4096,
+      "description": "Maximum number of tokens to generate (increase for complex objects)"
+    },
+    "temperature": {
+      "type": "number",
+      "default": 1.0,
+      "description": "Sampling temperature (only used if do_sample=true)"
+    },
+    "do_sample": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to use sampling or greedy decoding"
+    },
+    "zero_out_normals": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to ignore normals and use zeros (recommended)"
+    },
+    "seed": {
+      "type": "integer",
+      "default": 42,
+      "description": "Random seed for reproducible point cloud downsampling"
+    }
+  },
+  "oneOf": [
+    {
+      "required": ["mesh_path"]
+    },
+    {
+      "required": ["npz_path"]
+    },
+    {
+      "required": ["points"]
+    }
+  ]
+}

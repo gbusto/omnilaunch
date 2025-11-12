@@ -1,0 +1,18 @@
+name: omnilaunch/meshcoder
+version: "0.1.0"
+volume: "omnilaunch"
+app_name: "omnilaunch-meshcoder"
+entrypoints:
+  download_files:
+    function: modal_app.py::download_files
+    gpu: null
+  setup:
+    function: modal_app.py::setup
+    gpu: null
+  infer:
+    function: modal_app.py::infer
+    gpu: "A10G"
+    schema: schema/infer.json
+compat:
+  python: "==3.10"
+  cuda: "12.1"

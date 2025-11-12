@@ -464,7 +464,7 @@ def cmd_run(args: argparse.Namespace) -> int:
             vl = v.strip()
             
             # Auto-detect and encode image/file parameters
-            if key.lower() in ("image", "image_input", "file", "attachment"):
+            if key.lower() in ("image", "image_input", "file", "attachment", "mesh_path", "mesh", "model_path"):
                 # Check if it's a local file path
                 try:
                     p = Path(vl)
