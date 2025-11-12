@@ -9,10 +9,10 @@ OpenAI's open-source 120B parameter LLM with MXFP4 quantization, reasoning chann
 omni build omnilaunch/gpt-oss-120b
 
 # 2. Setup (download model, verify env)
-omni setup omnilaunch/gpt-oss-120b:0.1.0
+omni setup omnilaunch/gpt-oss-120b
 
 # 3. Run inference
-omni run omnilaunch/gpt-oss-120b:0.1.0 infer \
+omni run omnilaunch/gpt-oss-120b infer \
   -p messages='[{"role": "user", "content": "Explain quantum computing"}]'
 ```
 
@@ -68,14 +68,14 @@ The runner automatically parses this format and returns clean JSON with separate
 
 ### Basic chat
 ```bash
-omni run omnilaunch/gpt-oss-120b:0.1.0 infer \
+omni run omnilaunch/gpt-oss-120b infer \
   -p messages='[{"role": "user", "content": "What is recursion?"}]' \
   --save --outfile answer.json
 ```
 
 ### High reasoning
 ```bash
-omni run omnilaunch/gpt-oss-120b:0.1.0 infer \
+omni run omnilaunch/gpt-oss-120b infer \
   -p messages='[{"role": "user", "content": "Prove the Pythagorean theorem"}]' \
   -p reasoning_level=high \
   -p max_tokens=1024
@@ -83,7 +83,7 @@ omni run omnilaunch/gpt-oss-120b:0.1.0 infer \
 
 ### Multi-turn conversation
 ```bash
-omni run omnilaunch/gpt-oss-120b:0.1.0 infer \
+omni run omnilaunch/gpt-oss-120b infer \
   -p messages='[
     {"role": "user", "content": "I have 10 apples"},
     {"role": "assistant", "content": "Got it, you have 10 apples."},

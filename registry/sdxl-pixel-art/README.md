@@ -18,10 +18,10 @@ Fast pixel art generation using SDXL with LCM and Pixel Art LoRA adapters.
 omni build omnilaunch/sdxl-pixel-art
 
 # Setup (download model weights + LoRAs, ~14GB)
-omni setup omnilaunch/sdxl-pixel-art:0.1.0
+omni setup omnilaunch/sdxl-pixel-art
 
 # Generate pixel art
-omni run omnilaunch/sdxl-pixel-art:0.1.0 infer \
+omni run omnilaunch/sdxl-pixel-art infer \
   -p prompt="a medieval castle, pixel art style" \
   -p steps=6 \
   --save --outfile castle.png
@@ -47,19 +47,19 @@ Generate pixel art images with fast LCM sampling.
 
 ```bash
 # Character sprite
-omni run omnilaunch/sdxl-pixel-art:0.1.0 infer \
+omni run omnilaunch/sdxl-pixel-art infer \
   -p prompt="8-bit video game character, pixel art, knight with sword" \
   -p steps=8 -p lora_strength=1.0 \
   --save --outfile knight.png
 
 # Landscape
-omni run omnilaunch/sdxl-pixel-art:0.1.0 infer \
+omni run omnilaunch/sdxl-pixel-art infer \
   -p prompt="isometric pixel art city, cyberpunk, night, neon lights" \
   -p width=1024 -p height=768 \
   --save --outfile city.png
 
 # Item icon
-omni run omnilaunch/sdxl-pixel-art:0.1.0 infer \
+omni run omnilaunch/sdxl-pixel-art infer \
   -p prompt="pixel art potion bottle, glowing purple, item icon" \
   -p width=512 -p height=512 -p steps=4 \
   --save --outfile potion.png

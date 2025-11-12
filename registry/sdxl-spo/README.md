@@ -17,10 +17,10 @@ High-fidelity image generation using SDXL with SPO (Self-Play Preference Optimiz
 omni build omnilaunch/sdxl-spo
 
 # Setup (download model weights + LoRA + custom VAE, ~14GB)
-omni setup omnilaunch/sdxl-spo:0.1.0
+omni setup omnilaunch/sdxl-spo
 
 # Generate high-quality image
-omni run omnilaunch/sdxl-spo:0.1.0 infer \
+omni run omnilaunch/sdxl-spo infer \
   -p prompt="a majestic lion in the savanna, golden hour lighting, national geographic style" \
   -p steps=40 \
   --save --outfile lion.png
@@ -45,19 +45,19 @@ Generate images with SPO-enhanced quality and prompt adherence.
 
 ```bash
 # Photorealistic portrait
-omni run omnilaunch/sdxl-spo:0.1.0 infer \
+omni run omnilaunch/sdxl-spo infer \
   -p prompt="close-up portrait of an elderly woman, wrinkled skin, kind eyes, soft natural lighting" \
   -p steps=50 -p guidance_scale=8.0 \
   --save --outfile portrait.png
 
 # Architectural visualization
-omni run omnilaunch/sdxl-spo:0.1.0 infer \
+omni run omnilaunch/sdxl-spo infer \
   -p prompt="modern minimalist house, glass walls, surrounded by forest, architectural photography" \
   -p width=1344 -p height=768 \
   --save --outfile architecture.png
 
 # Product photography
-omni run omnilaunch/sdxl-spo:0.1.0 infer \
+omni run omnilaunch/sdxl-spo infer \
   -p prompt="luxury watch on marble surface, studio lighting, product photography, high detail" \
   -p steps=45 -p seed=123 \
   --save --outfile watch.png

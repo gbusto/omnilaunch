@@ -9,19 +9,19 @@ Vision-language model for image understanding and generation tasks. Fine-tuned w
 omni build omnilaunch/qwen3-vl
 
 # 2. Setup (download model, verify env)
-omni setup omnilaunch/qwen3-vl:0.1.0
+omni setup omnilaunch/qwen3-vl
 
 # 3. (Optional) Pre-download dataset on CPU to save GPU costs
-omni run omnilaunch/qwen3-vl:0.1.0 download_dataset
+omni run omnilaunch/qwen3-vl download_dataset
 
 # 4. Run inference on an image
-omni run omnilaunch/qwen3-vl:0.1.0 infer \
+omni run omnilaunch/qwen3-vl infer \
   -p image="path/to/image.jpg" \
   -p prompt="What's in this image?" \
   --save --outfile response.json
 
 # 5. Fine-tune on LaTeX OCR (auto-generates run name like "brave-lion-1234")
-omni run omnilaunch/qwen3-vl:0.1.0 train_lora \
+omni run omnilaunch/qwen3-vl train_lora \
   -p dataset_uri="hf:unsloth/LaTeX_OCR" \
   -p epochs=1 \
   -p max_train_samples=200 \
@@ -29,7 +29,7 @@ omni run omnilaunch/qwen3-vl:0.1.0 train_lora \
 # Returns: {"run_name": "brave-lion-1234", "output_path": "/omnilaunch/runs/qwen3-vl/brave-lion-1234", ...}
 
 # 6. Use your trained LoRA for inference
-omni run omnilaunch/qwen3-vl:0.1.0 infer \
+omni run omnilaunch/qwen3-vl infer \
   -p image="math_problem.jpg" \
   -p prompt="Write the LaTeX for this." \
   -p lora_run="brave-lion-1234" \
@@ -58,10 +58,10 @@ Pre-downloads and caches a HuggingFace dataset to the volume on CPU (no GPU need
 **Example:**
 ```bash
 # Cache default LaTeX dataset
-omni run omnilaunch/qwen3-vl:0.1.0 download_dataset
+omni run omnilaunch/qwen3-vl download_dataset
 
 # Cache a different dataset
-omni run omnilaunch/qwen3-vl:0.1.0 download_dataset \
+omni run omnilaunch/qwen3-vl download_dataset \
   -p dataset_uri="hf:your/dataset"
 ```
 
@@ -96,7 +96,7 @@ Vision-language inference - ask questions about images, describe images, extract
 **Using trained LoRA:**
 ```bash
 # After training, use the run_name from training output
-omni run omnilaunch/qwen3-vl:0.1.0 infer \
+omni run omnilaunch/qwen3-vl infer \
   -p image="test.jpg" \
   -p prompt="Describe this." \
   -p lora_run="brave-lion-1234" \
@@ -144,7 +144,7 @@ Fine-tune the vision-language model with LoRA using Unsloth optimizations.
 
 ### Image Description
 ```bash
-omni run omnilaunch/qwen3-vl:0.1.0 infer \
+omni run omnilaunch/qwen3-vl infer \
   -p image="vacation_photo.jpg" \
   -p prompt="Describe this image in detail." \
   --save
@@ -152,7 +152,7 @@ omni run omnilaunch/qwen3-vl:0.1.0 infer \
 
 ### OCR (Text Extraction)
 ```bash
-omni run omnilaunch/qwen3-vl:0.1.0 infer \
+omni run omnilaunch/qwen3-vl infer \
   -p image="document.png" \
   -p prompt="Extract all text from this image." \
   --save
@@ -160,7 +160,7 @@ omni run omnilaunch/qwen3-vl:0.1.0 infer \
 
 ### LaTeX Formula Recognition
 ```bash
-omni run omnilaunch/qwen3-vl:0.1.0 infer \
+omni run omnilaunch/qwen3-vl infer \
   -p image="math_formula.jpg" \
   -p prompt="Write the LaTeX representation for this image." \
   --save
@@ -169,11 +169,11 @@ omni run omnilaunch/qwen3-vl:0.1.0 infer \
 ### Fine-tune for Custom Vision Task
 ```bash
 # Recommended workflow: download dataset on CPU first to save GPU costs
-omni run omnilaunch/qwen3-vl:0.1.0 download_dataset \
+omni run omnilaunch/qwen3-vl download_dataset \
   -p dataset_uri="hf:yourname/custom-vision-dataset"
 
 # Then train on GPU (dataset already cached)
-omni run omnilaunch/qwen3-vl:0.1.0 train_lora \
+omni run omnilaunch/qwen3-vl train_lora \
   -p dataset_uri="hf:yourname/custom-vision-dataset" \
   -p instruction="Describe this medical image." \
   -p steps=100 \
@@ -183,10 +183,10 @@ omni run omnilaunch/qwen3-vl:0.1.0 train_lora \
 ### Quick Test Training (1 epoch on small subset)
 ```bash
 # Download dataset first (CPU, cheap)
-omni run omnilaunch/qwen3-vl:0.1.0 download_dataset
+omni run omnilaunch/qwen3-vl download_dataset
 
 # Quick test: 1 epoch on 200 examples
-omni run omnilaunch/qwen3-vl:0.1.0 train_lora \
+omni run omnilaunch/qwen3-vl train_lora \
   -p epochs=1 \
   -p max_train_samples=200 \
   --save
@@ -252,7 +252,7 @@ modal volume ls omnilaunch runs/qwen3-vl/
 **Using a trained model:**
 Just pass the run name (directory name) to `infer`:
 ```bash
-omni run omnilaunch/qwen3-vl:0.1.0 infer \
+omni run omnilaunch/qwen3-vl infer \
   -p image="test.jpg" \
   -p prompt="Analyze this." \
   -p lora_run="brave-lion-1234"

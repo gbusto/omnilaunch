@@ -16,10 +16,10 @@ High-quality text-to-image generation using Stable Diffusion XL Base 1.0.
 omni build omnilaunch/sdxl
 
 # Setup (download model weights, ~13GB)
-omni setup omnilaunch/sdxl:0.1.0
+omni setup omnilaunch/sdxl
 
 # Generate an image
-omni run omnilaunch/sdxl:0.1.0 infer \
+omni run omnilaunch/sdxl infer \
   -p prompt="a serene mountain landscape at sunset, oil painting" \
   -p negative_prompt="blurry, low quality" \
   -p steps=30 \
@@ -45,13 +45,13 @@ Generate images from text prompts.
 
 ```bash
 # Portrait
-omni run omnilaunch/sdxl:0.1.0 infer \
+omni run omnilaunch/sdxl infer \
   -p prompt="professional headshot of a woman, studio lighting" \
   -p width=768 -p height=1024 \
   --save --outfile portrait.png
 
 # Landscape with custom seed
-omni run omnilaunch/sdxl:0.1.0 infer \
+omni run omnilaunch/sdxl infer \
   -p prompt="cyberpunk city at night, neon lights, rain" \
   -p seed=42 -p steps=50 \
   --save --outfile cyberpunk.png

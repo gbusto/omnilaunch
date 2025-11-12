@@ -16,10 +16,10 @@ OpenAI's GPT-OSS-20B with harmony format reasoning - see the model's internal th
 omni build omnilaunch/gpt-oss-20b
 
 # Setup (download model weights, ~40GB)
-omni setup omnilaunch/gpt-oss-20b:0.1.0
+omni setup omnilaunch/gpt-oss-20b
 
 # Chat completion with reasoning
-omni run omnilaunch/gpt-oss-20b:0.1.0 infer \
+omni run omnilaunch/gpt-oss-20b infer \
   --params '{"messages": [{"role": "user", "content": "Explain quantum entanglement in simple terms"}], "reasoning_level": "high"}' \
   --save --outfile response.json
 ```
@@ -53,17 +53,17 @@ The response includes the model's internal reasoning process:
 
 ```bash
 # Simple query with medium reasoning
-omni run omnilaunch/gpt-oss-20b:0.1.0 infer \
+omni run omnilaunch/gpt-oss-20b infer \
   --params '{"messages": [{"role": "user", "content": "What is the capital of France?"}]}' \
   --save --outfile capital.json
 
 # Complex reasoning task
-omni run omnilaunch/gpt-oss-20b:0.1.0 infer \
+omni run omnilaunch/gpt-oss-20b infer \
   --params '{"messages": [{"role": "user", "content": "Design a sorting algorithm for nearly-sorted arrays"}], "reasoning_level": "high", "max_tokens": 512}' \
   --save --outfile algorithm.json
 
 # Multi-turn conversation
-omni run omnilaunch/gpt-oss-20b:0.1.0 infer \
+omni run omnilaunch/gpt-oss-20b infer \
   --params '{"messages": [{"role": "user", "content": "Hello!"}, {"role": "assistant", "content": "Hi! How can I help?"}, {"role": "user", "content": "Tell me a joke"}]}' \
   --save --outfile joke.json
 ```
@@ -88,16 +88,16 @@ Evaluate the model on the tinyBenchmarks/tinyMMLU dataset (100 examples). Fast, 
 **Usage:**
 ```bash
 # Standard eval (matches paper setup: harmony format + reasoning:high + log-likelihood)
-omni run omnilaunch/gpt-oss-20b:0.1.0 benchmark_tinymmlu \
+omni run omnilaunch/gpt-oss-20b benchmark_tinymmlu \
   --save --outfile tinymmlu.json
 
 # Custom reasoning level
-omni run omnilaunch/gpt-oss-20b:0.1.0 benchmark_tinymmlu \
+omni run omnilaunch/gpt-oss-20b benchmark_tinymmlu \
   -p reasoning_level=medium \
   --save --outfile tinymmlu_medium.json
 
 # Quick test (first 20 items)
-omni run omnilaunch/gpt-oss-20b:0.1.0 benchmark_tinymmlu \
+omni run omnilaunch/gpt-oss-20b benchmark_tinymmlu \
   -p max_items=20 \
   --save --outfile quick_test.json
 ```

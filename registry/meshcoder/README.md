@@ -14,10 +14,10 @@ modal secret create huggingface-secret HF_TOKEN=your_token_here
 
 # 3. Setup runner (one-time, ~5-10 min)
 omni build omnilaunch/meshcoder
-omni setup omnilaunch/meshcoder:0.1.0
+omni setup omnilaunch/meshcoder
 
 # 4. Generate Blender code from mesh
-omni run omnilaunch/meshcoder:0.1.0 infer -p mesh_path=chair.glb --save
+omni run omnilaunch/meshcoder infer -p mesh_path=chair.glb --save
 
 # 5. Visualize (requires Blender installed)
 blender --background --python omnilaunch/registry/meshcoder/scripts/visualize_meshcoder_local.py -- omni_out/blender_code.py output.glb
@@ -86,7 +86,7 @@ Test it: `blender --version` (should show Blender version)
 omni build omnilaunch/meshcoder
 
 # Deploy to Modal and download models (one-time setup)
-omni setup omnilaunch/meshcoder:0.1.0
+omni setup omnilaunch/meshcoder
 ```
 
 This will:
@@ -105,7 +105,7 @@ This will:
 Simply pass a mesh file (GLB, OBJ, STL, etc.) - the runner handles point cloud conversion automatically:
 
 ```bash
-omni run omnilaunch/meshcoder:0.1.0 infer \
+omni run omnilaunch/meshcoder infer \
   -p mesh_path=chair.glb \
   -p max_new_tokens=4096 \
   --save --outfile chair_code.py
@@ -196,10 +196,10 @@ modal secret create huggingface-secret HF_TOKEN=your_hf_token_here
 
 # Build and deploy
 omni build omnilaunch/meshcoder
-omni setup omnilaunch/meshcoder:0.1.0
+omni setup omnilaunch/meshcoder
 
 # 2. Run inference on a mesh file
-omni run omnilaunch/meshcoder:0.1.0 infer \
+omni run omnilaunch/meshcoder infer \
   -p mesh_path=chair.glb \
   -p max_new_tokens=4096 \
   --save --outfile chair_code.py
