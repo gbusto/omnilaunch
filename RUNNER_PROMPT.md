@@ -412,7 +412,7 @@ Brief description of what this model does.
 3) Implement `modal_app.py` with constants, image, volume, and functions.
 4) Add JSON schemas with clear descriptions and defaults.
 5) Add a minimal `tests/smoke.py` (e.g., verify volume exists).
-6) Build locally: `omni build omnilaunch/registry/<slug>`
+6) Build locally: `omni build omnilaunch/<slug>`
 7) Setup: `omni setup omnilaunch/<slug>:0.1.0`
 8) Help-test: `omni run omnilaunch/<slug>:0.1.0 --help` and `... <entrypoint> --help`
 9) Run infer with a tiny prompt; then (optionally) train_lora with a tiny dataset sample.

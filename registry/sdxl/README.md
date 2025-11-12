@@ -13,7 +13,7 @@ High-quality text-to-image generation using Stable Diffusion XL Base 1.0.
 
 ```bash
 # Build the runner
-omni build omnilaunch/registry/sdxl
+omni build omnilaunch/sdxl
 
 # Setup (download model weights, ~13GB)
 omni setup omnilaunch/sdxl:0.1.0

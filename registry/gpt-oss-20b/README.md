@@ -13,7 +13,7 @@ OpenAI's GPT-OSS-20B with harmony format reasoning - see the model's internal th
 
 ```bash
 # Build the runner
-omni build omnilaunch/registry/gpt-oss-20b
+omni build omnilaunch/gpt-oss-20b
 
 # Setup (download model weights, ~40GB)
 omni setup omnilaunch/gpt-oss-20b:0.1.0

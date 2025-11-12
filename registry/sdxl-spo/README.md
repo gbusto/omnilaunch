@@ -14,7 +14,7 @@ High-fidelity image generation using SDXL with SPO (Self-Play Preference Optimiz
 
 ```bash
 # Build the runner
-omni build omnilaunch/registry/sdxl-spo
+omni build omnilaunch/sdxl-spo
 
 # Setup (download model weights + LoRA + custom VAE, ~14GB)
 omni setup omnilaunch/sdxl-spo:0.1.0

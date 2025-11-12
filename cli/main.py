@@ -98,10 +98,24 @@ def _validate_runner_dir(runner_dir: Path) -> dict:
 
 
 def cmd_build(args: argparse.Namespace) -> int:
-    runner_dir = Path(args.path).resolve()
-    if not runner_dir.exists() or not runner_dir.is_dir():
-        print(f"[omni build] not a directory: {runner_dir}", file=sys.stderr)
-        return 2
+    # Accept either filesystem path or runner ref (e.g., "omnilaunch/meshcoder")
+    input_path = args.path
+
+    # Try as runner ref first (e.g., "omnilaunch/meshcoder")
+    if "/" in input_path and not Path(input_path).exists():
+        registry_root = Path(__file__).resolve().parents[1] / "registry"
+        slug = input_path.replace("omnilaunch/", "")
+        runner_dir = registry_root / slug
+        if not runner_dir.exists() or not runner_dir.is_dir():
+            print(f"[omni build] runner not found: {input_path}", file=sys.stderr)
+            print(f"[omni build] tried: {runner_dir}", file=sys.stderr)
+            return 2
+    else:
+        # Treat as filesystem path
+        runner_dir = Path(input_path).resolve()
+        if not runner_dir.exists() or not runner_dir.is_dir():
+            print(f"[omni build] not a directory: {runner_dir}", file=sys.stderr)
+            return 2
 
     try:
         files_map = _validate_runner_dir(runner_dir)
@@ -699,7 +713,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_list.set_defaults(func=cmd_list)
 
     p_build = sub.add_parser("build", help="Build a runner bundle")
-    p_build.add_argument("path", help="Path to runner folder")
+    p_build.add_argument("path", help="Runner ref (e.g., omnilaunch/meshcoder) or path to runner folder")
     p_build.set_defaults(func=cmd_build)
 
     p_setup = sub.add_parser("setup", help="Run runner setup on Modal: build image, verify env, download models")

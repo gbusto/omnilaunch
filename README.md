@@ -40,13 +40,14 @@ modal setup
 omni doctor
 
 # 4. Build a runner
-omni build omnilaunch/registry/sdxl/
+omni build omnilaunch/sdxl
 
 # 5. Deploy and download model weights (first-time setup)
-omni setup omnilaunch/sdxl:0.1.0
+# omni setup omnilaunch/sdxl:0.1.0
+omni setup omnilaunch/sdxl # works with and without specifying the version
 
 # 6. Run inference
-omni run omnilaunch/sdxl:0.1.0 infer \
+omni run omnilaunch/sdxl infer \
   -p prompt="astronaut riding a horse on mars" \
   -p steps=25 \
   --save --outfile astronaut.png
@@ -59,8 +60,8 @@ omni run omnilaunch/sdxl:0.1.0 infer \
 **Tip:** Use `--help` to explore any runner:
 
 ```bash
-omni run omnilaunch/sdxl:0.1.0 --help       # List all entrypoints
-omni run omnilaunch/sdxl:0.1.0 infer --help # Show parameters for infer
+omni run omnilaunch/sdxl --help       # List all entrypoints
+omni run omnilaunch/sdxl infer --help # Show parameters for infer
 ```
 
 ---
@@ -150,20 +151,20 @@ Run OpenAI's GPT-OSS models with parsed reasoning channels:
 
 ```bash
 # 20B model on A10G
-omni run omnilaunch/gpt-oss-20b:0.1.0 infer \
+omni run omnilaunch/gpt-oss-20b infer \
   -p messages='[{"role": "user", "content": "Explain quantum entanglement"}]' \
   -p reasoning_level=high \
   --save --outfile response.json
 
 # 120B model on H100
-omni run omnilaunch/gpt-oss-120b:0.1.0 infer \
+omni run omnilaunch/gpt-oss-120b infer \
   -p messages='[{"role": "user", "content": "Prove the Pythagorean theorem"}]' \
   -p reasoning_level=high \
   -p max_tokens=1024 \
   --save
 
 # Benchmark on tinyMMLU (60% accuracy on 10 samples, ~$0.12)
-omni run omnilaunch/gpt-oss-20b:0.1.0 benchmark_tinymmlu \
+omni run omnilaunch/gpt-oss-20b benchmark_tinymmlu \
   -p max_items=10 \
   -p reasoning_level=low \
   --save --outfile benchmark.json
@@ -176,27 +177,27 @@ Multiple SDXL variants ready to use:
 
 ```bash
 # Base SDXL
-omni run omnilaunch/sdxl:0.1.0 infer \
+omni run omnilaunch/sdxl infer \
   -p prompt="serene mountain landscape" --save
 
 # Pixel art style (with LCM + custom LoRA)
-omni run omnilaunch/sdxl-pixel-art:0.1.0 infer \
+omni run omnilaunch/sdxl-pixel-art infer \
   -p prompt="cute robot" --save
 
 # Aesthetic-optimized (SPO)
-omni run omnilaunch/sdxl-spo:0.1.0 infer \
+omni run omnilaunch/sdxl-spo infer \
   -p prompt="cinematic sunset" --save
 ```
 
 ### 🎵 **Audio Generation** *(coming soon)*
 ```bash
 # Text-to-speech
-omni run omnilaunch/orpheus:0.1.0 infer \
+omni run omnilaunch/orpheus infer \
   -p text="Hello, world!" \
   --save --outfile speech.wav
 
 # Music generation
-omni run omnilaunch/musicgen:0.1.0 infer \
+omni run omnilaunch/musicgen infer \
   -p prompt="upbeat jazz piano" \
   -p duration=30 \
   --save
@@ -205,12 +206,12 @@ omni run omnilaunch/musicgen:0.1.0 infer \
 ### 🎨 **3D Generation** *(coming soon)*
 ```bash
 # Text to 3D mesh
-omni run omnilaunch/hunyuan3d-2.1:0.1.0 infer \
+omni run omnilaunch/hunyuan3d-2.1 infer \
   -p prompt="a wooden chair" \
   --save --outfile chair.obj
 
 # Image to 3D
-omni run omnilaunch/trellis:0.1.0 infer \
+omni run omnilaunch/trellis infer \
   -p image="photo.png" \
   --save
 ```
@@ -220,21 +221,21 @@ Train Qwen3-VL-8B on custom datasets with LoRA:
 
 ```bash
 # Fine-tune on LaTeX OCR dataset (200 samples, ~8 min, ~$0.13)
-omni run omnilaunch/qwen3-vl:0.1.0 train_lora \
+omni run omnilaunch/qwen3-vl train_lora \
   -p dataset_uri="unsloth/LaTeX_OCR" \
   -p epochs=1 \
   -p max_train_samples=200 \
   --save --outfile training_results.json
 
 # Inference with your trained LoRA
-omni run omnilaunch/qwen3-vl:0.1.0 infer \
+omni run omnilaunch/qwen3-vl infer \
   -p image="handwritten_math.png" \
   -p prompt="Convert this to LaTeX" \
   -p lora_run="brave-lion-1234" \
   --save --outfile output.json
 
 # Pre-cache datasets on CPU (free!)
-omni run omnilaunch/qwen3-vl:0.1.0 download_dataset \
+omni run omnilaunch/qwen3-vl download_dataset \
   -p dataset_uri="unsloth/LaTeX_OCR"
 ```
 
@@ -245,13 +246,13 @@ Evaluate models on standard datasets:
 
 ```bash
 # GPT-OSS-20B on tinyMMLU (100 samples, ~65 min, ~$1.19)
-omni run omnilaunch/gpt-oss-20b:0.1.0 benchmark_tinymmlu \
+omni run omnilaunch/gpt-oss-20b benchmark_tinymmlu \
   -p max_items=100 \
   -p reasoning_level=low \
   --save --outfile results.json
 
 # Quick sanity check (10 samples, ~6.5 min, ~$0.12)
-omni run omnilaunch/gpt-oss-20b:0.1.0 benchmark_tinymmlu \
+omni run omnilaunch/gpt-oss-20b benchmark_tinymmlu \
   -p max_items=10 \
   --save
 ```
@@ -272,7 +273,7 @@ omni list
 #
 #   [ ] omnilaunch/qwen3-vl
 #       Status: Not built yet
-#       Build: omni build omnilaunch/registry/qwen3-vl
+#       Build: omni build omnilaunch/qwen3-vl
 #
 #   [✓] omnilaunch/sdxl
 #       Latest: 0.1.0
@@ -412,12 +413,12 @@ Coming soon:
 Reproduce any paper with one command:
 ```bash
 # Paper authors package their experiment as a runner
-omni run omnilaunch/llama3-alignment-paper:0.1.0 train_full \
+omni run omnilaunch/llama3-alignment-paper train_full \
   --dataset hf:openmath/gsm8k@rev
 
 # Benchmark results included
-omni run omnilaunch/llama3-alignment-paper:0.1.0 eval_mmlu
-omni run omnilaunch/llama3-alignment-paper:0.1.0 eval_gsm8k
+omni run omnilaunch/llama3-alignment-paper eval_mmlu
+omni run omnilaunch/llama3-alignment-paper eval_gsm8k
 ```
 
 Share *executable* results, not just papers. Encapsulate the entire experimental setup in a runner — training, evaluation, benchmarks. Full provenance from data → model → results.
@@ -427,17 +428,17 @@ Understand model evolution through training and alignment:
 
 ```bash
 # Compare checkpoints at different training stages
-omni run omnilaunch/llama3-checkpoints:0.1.0 infer \
+omni run omnilaunch/llama3-checkpoints infer \
   -p checkpoint="100k_steps" \
   -p prompt="Explain photosynthesis" \
   --save --outfile step_100k.json
 
-omni run omnilaunch/llama3-checkpoints:0.1.0 infer \
+omni run omnilaunch/llama3-checkpoints infer \
   -p checkpoint="500k_steps" \
   -p prompt="Explain photosynthesis" \
   --save --outfile step_500k.json
 
-omni run omnilaunch/llama3-checkpoints:0.1.0 infer \
+omni run omnilaunch/llama3-checkpoints infer \
   -p checkpoint="final" \
   -p prompt="Explain photosynthesis" \
   --save --outfile final.json
@@ -445,11 +446,11 @@ omni run omnilaunch/llama3-checkpoints:0.1.0 infer \
 # See how responses improve with training
 
 # Compare pre- and post-alignment behavior
-omni run omnilaunch/llama3-base:0.1.0 infer \
+omni run omnilaunch/llama3-base infer \
   -p prompt="How do I build a bomb?" \
   --save --outfile pre_safety.json
 
-omni run omnilaunch/llama3-safety-aligned:0.1.0 infer \
+omni run omnilaunch/llama3-safety-aligned infer \
   -p prompt="How do I build a bomb?" \
   --save --outfile post_safety.json
 
@@ -463,7 +464,7 @@ Omnilaunch standardizes **execution**, not hosting. Use runners as backends for 
 
 ```bash
 # Your backend uses the runner
-omni run omnilaunch/sdxl-dreambooth:0.1.0 train_lora \
+omni run omnilaunch/sdxl-dreambooth train_lora \
   --dataset hf:user/photos \
   --subject "sks person"
 
@@ -478,14 +479,14 @@ Model-specific, reproducible evaluation:
 
 ```bash
 # Available now: tinyMMLU for GPT-OSS models
-omni run omnilaunch/gpt-oss-20b:0.1.0 benchmark_tinymmlu \
+omni run omnilaunch/gpt-oss-20b benchmark_tinymmlu \
   -p max_items=100 \
   --save --outfile results.json
 
 # Coming soon: more benchmarks
-omni run omnilaunch/gpt-oss-20b:0.1.0 benchmark_gsm8k
-omni run omnilaunch/gpt-oss-20b:0.1.0 benchmark_humaneval
-omni run omnilaunch/diffusion-bench:0.1.0 fid --dataset coco
+omni run omnilaunch/gpt-oss-20b benchmark_gsm8k
+omni run omnilaunch/gpt-oss-20b benchmark_humaneval
+omni run omnilaunch/diffusion-bench fid --dataset coco
 
 # → Signed results feed reproducible leaderboards
 ```
@@ -564,10 +565,10 @@ These principles ensure stability, transparency, and long-term ecosystem health.
 
 ```bash
 # List all entrypoints for a runner
-omni run omnilaunch/sdxl:0.1.0 --help
+omni run omnilaunch/sdxl --help
 
 # Show parameters for a specific entrypoint
-omni run omnilaunch/sdxl:0.1.0 infer --help
+omni run omnilaunch/sdxl infer --help
 
 # Output shows:
 # - Entrypoint function and GPU requirement

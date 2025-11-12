@@ -6,7 +6,7 @@ OpenAI's open-source 120B parameter LLM with MXFP4 quantization, reasoning chann
 
 ```bash
 # 1. Build runner
-omni build omnilaunch/registry/gpt-oss-120b
+omni build omnilaunch/gpt-oss-120b
 
 # 2. Setup (download model, verify env)
 omni setup omnilaunch/gpt-oss-120b:0.1.0

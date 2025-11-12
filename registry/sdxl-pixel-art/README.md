@@ -15,7 +15,7 @@ Fast pixel art generation using SDXL with LCM and Pixel Art LoRA adapters.
 
 ```bash
 # Build the runner
-omni build omnilaunch/registry/sdxl-pixel-art
+omni build omnilaunch/sdxl-pixel-art
 
 # Setup (download model weights + LoRAs, ~14GB)
 omni setup omnilaunch/sdxl-pixel-art:0.1.0

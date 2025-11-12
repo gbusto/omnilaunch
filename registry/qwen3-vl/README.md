@@ -6,7 +6,7 @@ Vision-language model for image understanding and generation tasks. Fine-tuned w
 
 ```bash
 # 1. Build runner
-omni build omnilaunch/registry/qwen3-vl
+omni build omnilaunch/qwen3-vl
 
 # 2. Setup (download model, verify env)
 omni setup omnilaunch/qwen3-vl:0.1.0
@@ -309,7 +309,7 @@ Training metrics can be automatically logged to [Weights & Biases](https://wandb
    ```bash
    modal secret create wandb-secret WANDB_API_KEY=<your-key>
    ```
-3. Rebuild and redeploy: `omni build omnilaunch/registry/qwen3-vl`
+3. Rebuild and redeploy: `omni build omnilaunch/qwen3-vl`
 
 The runner automatically detects and uses the `wandb-secret` if it exists. No code changes needed!
 

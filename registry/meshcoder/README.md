@@ -13,7 +13,7 @@ Convert 3D meshes/point clouds into editable Blender Python scripts using MeshCo
 modal secret create huggingface-secret HF_TOKEN=your_token_here
 
 # 3. Setup runner (one-time, ~5-10 min)
-omni build omnilaunch/registry/meshcoder/
+omni build omnilaunch/meshcoder
 omni setup omnilaunch/meshcoder:0.1.0
 
 # 4. Generate Blender code from mesh
@@ -83,7 +83,7 @@ Test it: `blender --version` (should show Blender version)
 1. **Build and deploy the runner:**
 ```bash
 # Build the runner (packages it as versioned bundle)
-omni build omnilaunch/registry/meshcoder/
+omni build omnilaunch/meshcoder
 
 # Deploy to Modal and download models (one-time setup)
 omni setup omnilaunch/meshcoder:0.1.0
@@ -195,7 +195,7 @@ The visualization script (`scripts/visualize_meshcoder_local.py`) uses a minimal
 modal secret create huggingface-secret HF_TOKEN=your_hf_token_here
 
 # Build and deploy
-omni build omnilaunch/registry/meshcoder/
+omni build omnilaunch/meshcoder
 omni setup omnilaunch/meshcoder:0.1.0
 
 # 2. Run inference on a mesh file
