@@ -66,27 +66,27 @@ image = (
         "pip install bpy-4.0.0-cp310-cp310-manylinux_2_28_x86_64.whl",
         "rm bpy-4.0.0-cp310-cp310-manylinux_2_28_x86_64.whl"
     )
-    # Install remaining MeshCoder dependencies
+    # Install remaining MeshCoder dependencies (pinned for reproducibility)
     .pip_install(
         # Core dependencies from MeshCoder
-        "transformers==4.50.0",  # Need newer version for FlashAttentionKwargs
-        "peft",  # MeshCoder doesn't pin, use latest compatible
-        "accelerate",  # MeshCoder doesn't pin, use latest compatible
-        "huggingface_hub",  # MeshCoder doesn't pin, use latest compatible
-        "datasets",
-        # 3D processing (from MeshCoder README)
-        "opencv-python",  # cv2
-        "trimesh",
-        "scikit-image",
-        "boto3",
-        "wandb",
+        "transformers==4.50.0",
+        "peft==0.17.1",
+        "accelerate==1.11.0",
+        "huggingface_hub==0.36.0",
+        "datasets==4.4.1",
+        # 3D processing
+        "opencv-python==4.12.0.88",
+        "trimesh==4.9.0",
+        "scikit-image==0.25.2",
+        "boto3==1.40.71",
+        "wandb==0.23.0",
         # Note: bpy installed separately from official wheel (see above)
         # Other MeshCoder deps
-        "einops",
-        "omegaconf",
-        "jaxtyping",
-        "typeguard",
-        "pyyaml",
+        "einops==0.8.1",
+        "omegaconf==2.3.0",
+        "jaxtyping==0.3.3",
+        "typeguard==4.4.4",
+        "pyyaml",  # Not shown in output, keep unpinned
     )
     .env({
         "HF_HOME": HF_CACHE_DIR,

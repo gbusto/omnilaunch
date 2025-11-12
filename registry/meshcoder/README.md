@@ -6,21 +6,31 @@ Convert 3D meshes/point clouds into editable Blender Python scripts using MeshCo
 
 ```bash
 # 1. Request HuggingFace access (one-time)
-# - https://huggingface.co/meta-llama/Llama-3.2-1B (click "Request access")
-# - https://huggingface.co/InternRobotics/MeshCoder (click "Request access")
+# - Visit https://huggingface.co/meta-llama/Llama-3.2-1B - click "Request access" and accept Meta's license
+# - Visit https://huggingface.co/InternRobotics/MeshCoder - click "Request access" (auto-approved)
+# - In HuggingFace settings, update token permissions to include both repositories
 
-# 2. Configure HuggingFace token
+# 2. Configure HuggingFace token as Modal secret
 modal secret create huggingface-secret HF_TOKEN=your_token_here
 
-# 3. Setup runner (one-time, ~5-10 min)
+# 3. Build and deploy runner (one-time, ~10 min)
 omni build omnilaunch/meshcoder
 omni setup omnilaunch/meshcoder
 
-# 4. Generate Blender code from mesh
-omni run omnilaunch/meshcoder infer -p mesh_path=chair.glb --save
+# 4. Run inference on a mesh file
+omni run omnilaunch/meshcoder infer \
+  -p mesh_path=chair.glb \
+  -p max_new_tokens=4096 \
+  --save --outfile chair_code.py
 
-# 5. Visualize (requires Blender installed)
-blender --background --python omnilaunch/registry/meshcoder/scripts/visualize_meshcoder_local.py -- omni_out/blender_code.py output.glb
+# 5. Visualize the generated code (requires Blender installed)
+blender --background \
+  --python omnilaunch/registry/meshcoder/scripts/visualize_meshcoder_local.py -- \
+  omni_out/chair_code.py chair_output.glb
+
+# 6. View the result
+# Upload chair_output.glb to https://gltf-viewer.donmccurdy.com/
+# Or open in Blender, Babylon.js, Three.js, etc.
 ```
 
 ## Overview
@@ -186,33 +196,6 @@ The scene will load with all generated objects. You can inspect, modify, or re-e
 ### Visualization Script Details
 
 The visualization script (`scripts/visualize_meshcoder_local.py`) uses a minimal implementation of MeshCoder's Blender API that doesn't require torch or heavy dependencies - just Blender's built-in Python.
-
-## Complete Example Workflow
-
-```bash
-# 1. Setup (one-time)
-# First, request HuggingFace access and create Modal secret:
-modal secret create huggingface-secret HF_TOKEN=your_hf_token_here
-
-# Build and deploy
-omni build omnilaunch/meshcoder
-omni setup omnilaunch/meshcoder
-
-# 2. Run inference on a mesh file
-omni run omnilaunch/meshcoder infer \
-  -p mesh_path=chair.glb \
-  -p max_new_tokens=4096 \
-  --save --outfile chair_code.py
-
-# 3. Visualize the generated code
-blender --background \
-  --python omnilaunch/registry/meshcoder/scripts/visualize_meshcoder_local.py -- \
-  omni_out/chair_code.py chair_output.glb
-
-# 4. View the result
-# Upload chair_output.glb to https://gltf-viewer.donmccurdy.com/
-# Or open in Blender, Babylon.js, Three.js, etc.
-```
 
 ## References
 

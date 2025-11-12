@@ -38,22 +38,13 @@ def main():
 
     if len(argv) < 1:
         print("Usage:")
-        print("  Visualize: blender --python visualize_meshcoder_local.py -- code.py [--no-yup]")
-        print("  Export:    blender --background --python visualize_meshcoder_local.py -- code.py output.glb [--no-yup]")
-        print("")
-        print("Options:")
-        print("  --no-yup   Disable orientation correction (keeps original, usually wrong)")
-        print("")
-        print("Note: By default, objects are rotated 90° to appear upright (MeshCoder outputs on their back)")
+        print("  Visualize: blender --python visualize_meshcoder_local.py -- code.py")
+        print("  Export:    blender --background --python visualize_meshcoder_local.py -- code.py output.glb")
         sys.exit(1)
 
     input_file = os.path.abspath(argv[0])
     output_file = os.path.abspath(argv[1]) if len(argv) > 1 and not argv[1].startswith('--') else None
     export_mode = output_file is not None
-
-    # Check for flags
-    # Note: By default we DO convert to Y-up (MeshCoder output is oriented wrong otherwise)
-    convert_to_yup = '--no-yup' not in argv
 
     print(f"\n{'='*60}")
     print(f"MeshCoder Local Visualization")
@@ -61,10 +52,8 @@ def main():
     print(f"Input:  {input_file}")
     if export_mode:
         print(f"Output: {output_file}")
-        print(f"Orient: {'Corrected (Y-up conversion)' if convert_to_yup else 'Original (likely wrong)'}")
     else:
         print(f"Mode:   Interactive (will open in Blender)")
-        print(f"Orient: {'Corrected (90° rotation)' if convert_to_yup else 'Original (likely wrong)'}")
     print()
 
     # Read the generated code
@@ -101,7 +90,8 @@ def main():
         total_faces = sum(len(obj.data.polygons) for obj in mesh_objects)
         print(f"✓ Total: {total_verts} vertices, {total_faces} faces")
 
-        # Apply orientation correction if requested (for interactive mode)
+        # Apply orientation correction if requested (for interactive mode only)
+        # For export mode, we use export_yup instead
         if not export_mode and convert_to_yup:
             import math
             print(f"\n✓ Applying orientation correction (rotating all objects 90° around X)")
@@ -119,26 +109,31 @@ def main():
 
     # Export if requested (headless mode)
     if export_mode:
+        # Apply transforms to geometry before export
+        print(f"\n✓ Applying transforms to mesh geometry")
+        # Select all objects
+        bpy.ops.object.select_all(action='SELECT')
+        # Set one object as active (required for transform_apply)
+        if bpy.data.objects:
+            bpy.context.view_layer.objects.active = bpy.data.objects[0]
+        # Apply any existing transforms (rotation, location, scale) to the mesh geometry
+        # This bakes the transforms into the vertex positions
+        bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
+
         print(f"\n{'='*60}")
         print("Exporting...")
         print(f"{'='*60}\n")
 
         try:
-            # Export to GLB with optional Y-up conversion
-            # Blender uses Z-up, but most game engines/viewers use Y-up
-            # Setting export_yup=True converts the coordinate system automatically
+            # Export to GLB
             bpy.ops.export_scene.gltf(
                 filepath=output_file,
                 export_format='GLB',
                 use_selection=False,
                 export_apply=True,
-                export_yup=convert_to_yup  # Convert Z-up to Y-up for compatibility
+                export_yup=False
             )
             print(f"✓ Exported to: {output_file}")
-            if convert_to_yup:
-                print(f"  (orientation corrected for Y-up viewers)")
-            else:
-                print(f"  (keeping original orientation - may appear wrong)")
 
             # Also try OBJ
             if output_file.endswith('.glb'):
