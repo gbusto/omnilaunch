@@ -180,8 +180,6 @@ This creates:
 - `output.glb` - 3D model (view in Babylon.js, Three.js, etc.)
 - `output.obj` - Also exports OBJ format
 
-**Note**: The script automatically corrects orientation (converts to Y-up) since MeshCoder's output is oriented incorrectly by default. If you want the original orientation for some reason, add `--no-yup`.
-
 ### Option 2: Interactive Blender GUI
 
 ```bash
